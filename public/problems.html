@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Problems - CodePractice</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    .topic-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      padding: 1rem;
+      background-color: var(--surface-color);
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 0;
+    }
+
+    .topic-tab {
+      padding: 0.5rem 1rem;
+      background-color: var(--background-color);
+      border: 1px solid var(--border-color);
+      border-radius: 2rem;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .topic-tab:hover {
+      background-color: var(--surface-light);
+      color: var(--text-primary);
+      border-color: var(--text-secondary);
+    }
+
+    .topic-tab.active {
+      background-color: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    .topic-tab .count {
+      display: inline-block;
+      background-color: rgba(255, 255, 255, 0.2);
+      padding: 0.125rem 0.375rem;
+      border-radius: 1rem;
+      font-size: 0.7rem;
+      margin-left: 0.375rem;
+    }
+
+    .topic-tab:not(.active) .count {
+      background-color: var(--surface-light);
+    }
+
+    .problems-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      background-color: var(--surface-light);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .problems-count {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .topic-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.25rem;
+    }
+
+    .topic-tag {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      background-color: var(--surface-light);
+      border-radius: 1rem;
+      font-size: 0.65rem;
+      color: var(--text-secondary);
+    }
+
+    .problem-cell {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Status Labels */
+    .status-label {
+      display: inline-block;
+      padding: 0.25rem 0.625rem;
+      border-radius: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+      white-space: nowrap;
+    }
+
+    .status-not-attempted {
+      background-color: rgba(107, 114, 128, 0.15);
+      color: #6b7280;
+    }
+
+    .status-attempted {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+    }
+
+    .status-solved {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: #059669;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="/" class="logo">
+        <span class="logo-icon">⟨/⟩</span>
+        CodePractice
+      </a>
+      <nav class="nav">
+        <a href="/problems" class="nav-link" style="color: var(--primary-color);">Problems</a>
+        <div id="auth-nav">
+          <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
+          <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+        <div id="user-nav" class="user-info hidden">
+          <span class="username">Welcome, <span id="nav-username"></span></span>
+          <button onclick="handleLogout()" class="btn btn-secondary btn-sm">Log Out</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="page-header">
+      <h1>Problems</h1>
+      <p>Practice coding problems to improve your skills</p>
+    </div>
+
+    <div class="card">
+      <!-- Topic Filter Tabs -->
+      <div class="topic-tabs" id="topic-tabs">
+        <button class="topic-tab active" data-topic="All">All Topics</button>
+        <!-- Topics will be dynamically added here -->
+      </div>
+
+      <!-- Problems Count Header -->
+      <div class="problems-header">
+        <span class="problems-count" id="problems-count">Loading...</span>
+      </div>
+
+      <table class="problems-table">
+        <thead>
+          <tr>
+            <th style="width: 110px;">Status</th>
+            <th>Title</th>
+            <th style="width: 150px;">Topics</th>
+            <th style="width: 100px;">Difficulty</th>
+          </tr>
+        </thead>
+        <tbody id="problems-list">
+          <tr>
+            <td colspan="4" style="text-align: center; padding: 3rem;">
+              <div class="spinner" style="margin: 0 auto;"></div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const problemsList = document.getElementById('problems-list');
+    const topicTabs = document.getElementById('topic-tabs');
+    const problemsCount = document.getElementById('problems-count');
+    
+    let allProblems = [];
+    let allTopics = [];
+    let currentTopic = 'All';
+    let topicCounts = {};
+
+    async function loadProblems(topic = 'All') {
+      currentTopic = topic;
+      
+      try {
+        const { problems, topics } = await API.getProblems(topic === 'All' ? null : topic);
+        allProblems = problems;
+        allTopics = topics;
+        
+        // Calculate topic counts (only on first load)
+        if (Object.keys(topicCounts).length === 0) {
+          const { problems: allP } = await API.getProblems();
+          topicCounts = { 'All': allP.length };
+          allP.forEach(p => {
+            (p.topics || []).forEach(t => {
+              topicCounts[t] = (topicCounts[t] || 0) + 1;
+            });
+          });
+          renderTopicTabs();
+        }
+        
+        updateActiveTab();
+        renderProblems(problems);
+      } catch (error) {
+        console.error('Failed to load problems:', error);
+        problemsList.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-state">
+              <p style="color: var(--danger-color);">Failed to load problems. Please try again.</p>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function renderTopicTabs() {
+      topicTabs.innerHTML = `
+        <button class="topic-tab active" data-topic="All">
+          All Topics <span class="count">${topicCounts['All'] || 0}</span>
+        </button>
+      `;
+      
+      allTopics.forEach(topic => {
+        const count = topicCounts[topic] || 0;
+        topicTabs.innerHTML += `
+          <button class="topic-tab" data-topic="${topic}">
+            ${topic} <span class="count">${count}</span>
+          </button>
+        `;
+      });
+
+      // Add click handlers
+      topicTabs.querySelectorAll('.topic-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          loadProblems(tab.dataset.topic);
+        });
+      });
+    }
+
+    function updateActiveTab() {
+      topicTabs.querySelectorAll('.topic-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.topic === currentTopic);
+      });
+    }
+
+    function renderProblems(problems) {
+      problemsCount.textContent = `${problems.length} problem${problems.length !== 1 ? 's' : ''}${currentTopic !== 'All' ? ` in ${currentTopic}` : ''}`;
+      
+      if (problems.length === 0) {
+        problemsList.innerHTML = `
+          <tr>
+            <td colspan="4" class="empty-state">
+              <div class="empty-state-icon">📝</div>
+              <p>No problems found for this topic.</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      problemsList.innerHTML = problems.map(problem => {
+        const statusLabel = getStatusLabel(problem.userStatus);
+        const difficultyClass = `difficulty-${problem.difficulty.toLowerCase()}`;
+        const topics = (problem.topics || []).slice(0, 3); // Show max 3 topics
+        
+        return `
+          <tr>
+            <td>${statusLabel}</td>
+            <td>
+              <div class="problem-cell">
+                <a href="/problem/${problem.slug}" class="problem-title">${problem.title}</a>
+              </div>
+            </td>
+            <td>
+              <div class="topic-tags">
+                ${topics.map(t => `<span class="topic-tag">${t}</span>`).join('')}
+              </div>
+            </td>
+            <td>
+              <span class="difficulty ${difficultyClass}">${problem.difficulty}</span>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function getStatusLabel(userStatus) {
+      if (!userStatus) {
+        return '<span class="status-label status-not-attempted">Not Attempted</span>';
+      }
+      
+      if (userStatus.status === 'Accepted') {
+        return '<span class="status-label status-solved">Solved</span>';
+      }
+      
+      return '<span class="status-label status-attempted">Attempted</span>';
+    }
+
+    loadProblems();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Problem - CodePractice</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Problem Tabs */
+    .problem-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 1.5rem;
+      background-color: var(--surface-color);
+      margin: 0 -1.5rem;
+      padding: 0 1.5rem;
+    }
+
+    .problem-tab {
+      padding: 0.875rem 1.25rem;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .problem-tab:hover {
+      color: var(--text-primary);
+      background-color: var(--surface-light);
+    }
+
+    .problem-tab.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    .problem-tab-content {
+      padding-top: 1rem;
+    }
+
+    .problem-tab-content.hidden {
+      display: none;
+    }
+
+    .problem-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-top: 0.75rem;
+    }
+
+    .problem-topic-tag {
+      display: inline-block;
+      padding: 0.25rem 0.625rem;
+      background-color: var(--surface-light);
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* Editorial Styles */
+    .editorial-content {
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .editorial-meta {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background-color: var(--surface-color);
+      border-radius: 0.5rem;
+      border: 1px solid var(--border-color);
+    }
+
+    .editorial-meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .editorial-meta-label {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .editorial-meta-value {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .editorial-section {
+      margin-bottom: 2rem;
+    }
+
+    .editorial-section h3 {
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .approach-card {
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+
+    .approach-header {
+      padding: 1rem;
+      background-color: var(--surface-light);
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .approach-header:hover {
+      background-color: var(--border-color);
+    }
+
+    .approach-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+    }
+
+    .approach-complexity {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .approach-body {
+      padding: 1rem;
+    }
+
+    .approach-body.hidden {
+      display: none;
+    }
+
+    .approach-description {
+      margin-bottom: 1rem;
+      color: var(--text-secondary);
+    }
+
+    .approach-code {
+      margin-top: 1rem;
+    }
+
+    .code-block-header {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .code-lang-btn {
+      padding: 0.25rem 0.75rem;
+      background-color: var(--surface-light);
+      border: 1px solid var(--border-color);
+      border-radius: 0.25rem;
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .code-lang-btn:hover {
+      background-color: var(--border-color);
+    }
+
+    .code-lang-btn.active {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+
+    .editorial-code {
+      background-color: var(--code-bg);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      overflow-x: auto;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+
+    .key-insights {
+      list-style: none;
+      padding: 0;
+    }
+
+    .key-insights li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .key-insights li::before {
+      content: "💡";
+      position: absolute;
+      left: 0;
+      font-size: 0.9rem;
+    }
+
+    .expand-icon {
+      transition: transform 0.2s;
+    }
+
+    .expand-icon.rotated {
+      transform: rotate(180deg);
+    }
+
+    /* Submissions Tab Styles */
+    .submissions-content {
+      padding: 0;
+    }
+
+    .submissions-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: var(--surface-color);
+      border-bottom: 1px solid var(--border-color);
+      margin: 0 -1.5rem;
+      padding: 0.75rem 1.5rem;
+    }
+
+    .submissions-count {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .submission-list {
+      padding: 1rem 0;
+    }
+
+    .submission-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .submission-item:hover {
+      background-color: var(--surface-light);
+      border-color: var(--primary-color);
+    }
+
+    .submission-status-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      margin-right: 1rem;
+      flex-shrink: 0;
+    }
+
+    .submission-status-icon.accepted {
+      background-color: rgba(16, 185, 129, 0.1);
+      color: var(--success-color);
+    }
+
+    .submission-status-icon.rejected {
+      background-color: rgba(239, 68, 68, 0.1);
+      color: var(--danger-color);
+    }
+
+    .submission-info {
+      flex: 1;
+    }
+
+    .submission-status-text {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .submission-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .submission-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .submission-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .submission-load-btn {
+      padding: 0.5rem 1rem;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .submission-load-btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .no-submissions {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-secondary);
+    }
+
+    .no-submissions-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .login-prompt {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+
+    .login-prompt p {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="/" class="logo">
+        <span class="logo-icon">⟨/⟩</span>
+        CodePractice
+      </a>
+      <nav class="nav">
+        <a href="/problems" class="nav-link">Problems</a>
+        <div id="auth-nav">
+          <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
+          <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+        <div id="user-nav" class="user-info hidden">
+          <span class="username">Welcome, <span id="nav-username"></span></span>
+          <button onclick="handleLogout()" class="btn btn-secondary btn-sm">Log Out</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="problem-page">
+    <!-- Problem Description Panel -->
+    <div class="problem-description" id="problem-description">
+      <div id="problem-loading" style="text-align: center; padding: 3rem;">
+        <div class="spinner" style="margin: 0 auto 1rem;"></div>
+        <p>Loading problem...</p>
+      </div>
+      <div id="problem-content" class="hidden">
+        <div class="problem-header">
+          <h1>
+            <span id="problem-title"></span>
+            <span id="problem-difficulty" class="difficulty"></span>
+          </h1>
+          <div class="problem-topics" id="problem-topics"></div>
+        </div>
+        
+        <!-- Problem Tabs -->
+        <div class="problem-tabs">
+          <button class="problem-tab active" data-tab="description">
+            📝 Description
+          </button>
+          <button class="problem-tab" data-tab="editorial">
+            💡 Editorial
+          </button>
+          <button class="problem-tab" data-tab="submissions">
+            📋 Submissions
+          </button>
+        </div>
+
+        <!-- Description Tab -->
+        <div id="tab-description" class="problem-tab-content">
+          <div class="problem-content">
+            <div id="problem-statement"></div>
+            
+            <h3>Examples</h3>
+            <div id="problem-examples"></div>
+            
+            <h3>Constraints</h3>
+            <div id="problem-constraints" class="constraints"></div>
+          </div>
+        </div>
+
+        <!-- Editorial Tab -->
+        <div id="tab-editorial" class="problem-tab-content hidden">
+          <div class="editorial-content" id="editorial-content">
+            <p style="color: var(--text-secondary);">Loading editorial...</p>
+          </div>
+        </div>
+
+        <!-- Submissions Tab -->
+        <div id="tab-submissions" class="problem-tab-content hidden">
+          <div class="submissions-content" id="submission-history">
+            <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">Loading submissions...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Editor Panel -->
+    <div class="problem-workspace">
+      <div class="editor-container">
+        <div class="editor-header">
+          <select id="language-select" class="language-select">
+            <option value="javascript">JavaScript</option>
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+            <option value="cpp">C++</option>
+            <option value="c">C</option>
+            <option value="csharp">C#</option>
+          </select>
+          <div class="editor-actions">
+            <button id="run-btn" class="btn btn-secondary btn-sm" title="Run against sample test cases only (not saved)">
+              ▶ Run Code
+            </button>
+            <button id="submit-btn" class="btn btn-success btn-sm" title="Submit solution - runs against all test cases and saves to history">
+              ✓ Submit
+            </button>
+          </div>
+        </div>
+        <textarea id="code-editor" class="code-editor" spellcheck="false"></textarea>
+      </div>
+
+      <!-- Results Panel -->
+      <div class="results-container">
+        <div class="results-header">
+          <div class="results-tabs">
+            <button class="results-tab active" data-tab="testcases" title="Results from running code against sample tests">Sample Tests</button>
+            <button class="results-tab" data-tab="result" title="Results from submitting solution">Submission Result</button>
+          </div>
+        </div>
+        <div class="results-content">
+          <div id="tab-testcases" class="tab-panel">
+            <div id="sample-tests" class="empty-state">
+              <p style="color: var(--text-secondary);">Click <strong>"Run Code"</strong> to test against sample cases</p>
+              <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">This will not be saved to your submission history</p>
+            </div>
+          </div>
+          <div id="tab-result" class="tab-panel hidden">
+            <div id="submission-result" class="empty-state">
+              <p style="color: var(--text-secondary);">Click <strong>"Submit"</strong> to evaluate against all test cases</p>
+              <p style="color: var(--text-secondary); font-size: 0.8rem; margin-top: 0.5rem;">Submissions are saved to your history</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Get problem slug from URL
+    const pathParts = window.location.pathname.split('/');
+    const problemSlug = pathParts[pathParts.length - 1];
+
+    // DOM Elements
+    const problemTitle = document.getElementById('problem-title');
+    const problemDifficulty = document.getElementById('problem-difficulty');
+    const problemTopics = document.getElementById('problem-topics');
+    const problemStatement = document.getElementById('problem-statement');
+    const problemExamples = document.getElementById('problem-examples');
+    const problemConstraints = document.getElementById('problem-constraints');
+    const problemLoading = document.getElementById('problem-loading');
+    const problemContent = document.getElementById('problem-content');
+    const editorialContent = document.getElementById('editorial-content');
+    const languageSelect = document.getElementById('language-select');
+    const codeEditor = document.getElementById('code-editor');
+    const runBtn = document.getElementById('run-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const sampleTests = document.getElementById('sample-tests');
+    const submissionResult = document.getElementById('submission-result');
+    const submissionHistory = document.getElementById('submission-history');
+
+    let problem = null;
+    let starterCode = {};
+
+    // Results tab switching
+    document.querySelectorAll('.results-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.results-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.remove('hidden');
+      });
+    });
+
+    // Problem tab switching (Description / Editorial / Submissions)
+    document.querySelectorAll('.problem-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.problem-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.problem-tab-content').forEach(p => p.classList.add('hidden'));
+        tab.classList.add('active');
+        document.getElementById(`tab-${tab.dataset.tab}`).classList.remove('hidden');
+        
+        // Load submissions when switching to submissions tab
+        if (tab.dataset.tab === 'submissions' && currentUser) {
+          loadHistory();
+        }
+      });
+    });
+
+    // Language switching
+    languageSelect.addEventListener('change', () => {
+      const lang = languageSelect.value;
+      if (starterCode[lang]) {
+        // Only change if code is empty or matches any starter code
+        const currentCode = codeEditor.value.trim();
+        const isStarterCode = Object.values(starterCode).some(
+          starter => starter && currentCode === starter.trim()
+        );
+        
+        if (!currentCode || isStarterCode) {
+          codeEditor.value = starterCode[lang];
+        }
+      }
+    });
+
+    // Handle Tab key in editor
+    codeEditor.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = codeEditor.selectionStart;
+        const end = codeEditor.selectionEnd;
+        codeEditor.value = codeEditor.value.substring(0, start) + '  ' + codeEditor.value.substring(end);
+        codeEditor.selectionStart = codeEditor.selectionEnd = start + 2;
+      }
+    });
+
+    // Load problem
+    async function loadProblem() {
+      try {
+        const { problem: p } = await API.getProblem(problemSlug);
+        problem = p;
+        starterCode = p.starter_code;
+
+        document.title = `${p.title} - CodePractice`;
+        problemTitle.textContent = p.title;
+        problemDifficulty.textContent = p.difficulty;
+        problemDifficulty.className = `difficulty difficulty-${p.difficulty.toLowerCase()}`;
+        
+        // Render topics
+        if (p.topics && p.topics.length > 0) {
+          problemTopics.innerHTML = p.topics.map(t => 
+            `<span class="problem-topic-tag">${escapeHtml(t)}</span>`
+          ).join('');
+        }
+        
+        // Render description with markdown-like formatting
+        problemStatement.innerHTML = formatDescription(p.description);
+        
+        // Render examples
+        problemExamples.innerHTML = p.examples.map((ex, i) => `
+          <div class="example">
+            <div class="example-label">Example ${i + 1}:</div>
+            <div class="example-content">
+              <div><strong>Input:</strong> ${escapeHtml(ex.input)}</div>
+              <div><strong>Output:</strong> ${escapeHtml(ex.output)}</div>
+              ${ex.explanation ? `<div><strong>Explanation:</strong> ${escapeHtml(ex.explanation)}</div>` : ''}
+            </div>
+          </div>
+        `).join('');
+
+        // Render constraints
+        problemConstraints.innerHTML = p.constraints
+          .split('\n')
+          .filter(c => c.trim())
+          .map(c => `<li>${escapeHtml(c.replace(/^-\s*/, ''))}</li>`)
+          .join('');
+
+        // Render editorial
+        renderEditorial(p.editorial);
+
+        // Set starter code
+        codeEditor.value = starterCode.javascript || '';
+
+        problemLoading.classList.add('hidden');
+        problemContent.classList.remove('hidden');
+      } catch (error) {
+        problemLoading.innerHTML = `
+          <p style="color: var(--danger-color);">Failed to load problem: ${error.message}</p>
+          <a href="/problems" class="btn btn-primary" style="margin-top: 1rem;">Back to Problems</a>
+        `;
+      }
+    }
+
+    // Render editorial content
+    function renderEditorial(editorial) {
+      if (!editorial || !editorial.approaches) {
+        editorialContent.innerHTML = `
+          <div class="empty-state">
+            <p style="color: var(--text-secondary);">Editorial coming soon...</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = `
+        <!-- Complexity Meta -->
+        <div class="editorial-meta">
+          <div class="editorial-meta-item">
+            <span class="editorial-meta-label">Time Complexity</span>
+            <span class="editorial-meta-value">${escapeHtml(editorial.timeComplexity || 'O(n)')}</span>
+          </div>
+          <div class="editorial-meta-item">
+            <span class="editorial-meta-label">Space Complexity</span>
+            <span class="editorial-meta-value">${escapeHtml(editorial.spaceComplexity || 'O(n)')}</span>
+          </div>
+        </div>
+
+        <!-- Approaches -->
+        <div class="editorial-section">
+          <h3>🔍 Solution Approaches</h3>
+          ${editorial.approaches.map((approach, idx) => `
+            <div class="approach-card">
+              <div class="approach-header" onclick="toggleApproach(${idx})">
+                <div>
+                  <span class="approach-title">${idx + 1}. ${escapeHtml(approach.name)}</span>
+                </div>
+                <div class="approach-complexity">
+                  <span>⏱ ${escapeHtml(approach.timeComplexity)}</span>
+                  <span>💾 ${escapeHtml(approach.spaceComplexity)}</span>
+                  <span class="expand-icon" id="expand-icon-${idx}">▼</span>
+                </div>
+              </div>
+              <div class="approach-body ${idx === 0 ? '' : 'hidden'}" id="approach-body-${idx}">
+                <p class="approach-description">${escapeHtml(approach.description)}</p>
+                
+                ${approach.code ? `
+                  <div class="approach-code">
+                    <div class="code-block-header">
+                      ${Object.keys(approach.code).map((lang, langIdx) => `
+                        <button class="code-lang-btn ${langIdx === 0 ? 'active' : ''}" 
+                                onclick="switchCodeLang(${idx}, '${lang}', this)">
+                          ${lang === 'javascript' ? 'JavaScript' : lang === 'python' ? 'Python' : lang}
+                        </button>
+                      `).join('')}
+                    </div>
+                    ${Object.entries(approach.code).map(([lang, code], langIdx) => `
+                      <pre class="editorial-code ${langIdx === 0 ? '' : 'hidden'}" 
+                           id="code-${idx}-${lang}">${escapeHtml(code)}</pre>
+                    `).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Key Insights -->
+        ${editorial.keyInsights && editorial.keyInsights.length > 0 ? `
+          <div class="editorial-section">
+            <h3>💡 Key Insights</h3>
+            <ul class="key-insights">
+              ${editorial.keyInsights.map(insight => `
+                <li>${escapeHtml(insight)}</li>
+              `).join('')}
+            </ul>
+          </div>
+        ` : ''}
+      `;
+
+      editorialContent.innerHTML = html;
+    }
+
+    // Toggle approach expand/collapse
+    function toggleApproach(idx) {
+      const body = document.getElementById(`approach-body-${idx}`);
+      const icon = document.getElementById(`expand-icon-${idx}`);
+      body.classList.toggle('hidden');
+      icon.classList.toggle('rotated');
+    }
+
+    // Switch code language in editorial
+    function switchCodeLang(approachIdx, lang, btn) {
+      // Hide all code blocks for this approach
+      const approach = document.getElementById(`approach-body-${approachIdx}`);
+      approach.querySelectorAll('.editorial-code').forEach(el => el.classList.add('hidden'));
+      approach.querySelectorAll('.code-lang-btn').forEach(el => el.classList.remove('active'));
+      
+      // Show selected code block
+      document.getElementById(`code-${approachIdx}-${lang}`).classList.remove('hidden');
+      btn.classList.add('active');
+    }
+
+    function formatDescription(text) {
+      // Convert backticks to code
+      let html = escapeHtml(text);
+      html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+      html = html.replace(/\n\n/g, '</p><p>');
+      return `<p>${html}</p>`;
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function getTimeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      if (seconds < 60) return 'just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      if (days < 7) return `${days}d ago`;
+      return date.toLocaleDateString();
+    }
+
+    // Run code
+    runBtn.addEventListener('click', async () => {
+      if (!currentUser) {
+        alert('Please log in to run code');
+        window.location.href = '/login';
+        return;
+      }
+
+      runBtn.disabled = true;
+      runBtn.innerHTML = '<span class="spinner"></span> Running...';
+      
+      // Switch to test cases tab
+      document.querySelector('[data-tab="testcases"]').click();
+
+      try {
+        const result = await API.runCode(problemSlug, codeEditor.value, languageSelect.value);
+        displayTestResults(result.results, result.summary);
+      } catch (error) {
+        sampleTests.innerHTML = `
+          <div class="test-result error">
+            <div class="test-result-body">
+              <div class="test-result-header">
+                <span style="color: var(--danger-color);">Error</span>
+              </div>
+              <div class="test-result-details console-error">${escapeHtml(error.message)}</div>
+            </div>
+          </div>
+        `;
+      } finally {
+        runBtn.disabled = false;
+        runBtn.innerHTML = '▶ Run Code';
+      }
+    });
+
+    // Submit code
+    submitBtn.addEventListener('click', async () => {
+      if (!currentUser) {
+        alert('Please log in to submit');
+        window.location.href = '/login';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Submitting...';
+      
+      // Switch to result tab
+      document.querySelector('[data-tab="result"]').click();
+
+      try {
+        const result = await API.submitCode(problemSlug, codeEditor.value, languageSelect.value);
+        displaySubmissionResult(result);
+        // Refresh the history sidebar
+        loadHistory();
+      } catch (error) {
+        submissionResult.innerHTML = `
+          <div class="submission-status rejected">
+            <h3>Submission Error</h3>
+            <p>${escapeHtml(error.message)}</p>
+          </div>
+        `;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '✓ Submit';
+      }
+    });
+
+    function displayTestResults(results, summary) {
+      sampleTests.innerHTML = results.map((r, i) => {
+        const statusClass = r.status === 'Passed' ? 'passed' : (r.error ? 'error' : 'failed');
+        const statusColor = r.status === 'Passed' ? 'var(--success-color)' : 'var(--danger-color)';
+        
+        return `
+          <div class="test-result ${statusClass}">
+            <div class="test-result-body">
+              <div class="test-result-header">
+                <span style="color: ${statusColor};">Test ${i + 1}: ${r.status}</span>
+                ${r.runtime ? `<span style="color: var(--text-secondary); font-size: 0.75rem; margin-left: 1rem;">${r.runtime}ms</span>` : ''}
+              </div>
+              ${r.error ? `<div class="test-result-details console-error">${escapeHtml(r.error)}</div>` : ''}
+              ${!r.error && r.status !== 'Passed' ? `
+                <div class="test-result-details">
+                  <div><strong>Expected:</strong> ${JSON.stringify(r.expected)}</div>
+                  <div><strong>Got:</strong> ${JSON.stringify(r.output)}</div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Add summary
+      const summaryColor = summary.allPassed ? 'var(--success-color)' : 'var(--warning-color)';
+      sampleTests.innerHTML = `
+        <div style="margin-bottom: 1rem; padding: 0.75rem; background: var(--surface-color); border-radius: 0.5rem; border-left: 3px solid ${summaryColor};">
+          <div style="font-weight: 600; margin-bottom: 0.25rem;">Sample Test Results</div>
+          <div><strong>${summary.passed}/${summary.total}</strong> sample tests passed</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">
+            ℹ️ This is not a submission. Click "Submit" to run against all test cases and save your solution.
+          </div>
+        </div>
+      ` + sampleTests.innerHTML;
+    }
+
+    function displaySubmissionResult(result) {
+      const isAccepted = result.status === 'Accepted';
+      const statusClass = isAccepted ? 'accepted' : 'rejected';
+      
+      submissionResult.innerHTML = `
+        <div class="submission-status ${statusClass}">
+          <h3>${result.status}</h3>
+          <p>${result.passed}/${result.total} test cases passed</p>
+          <div class="submission-stats">
+            <span>
+              <strong>${result.runtime}ms</strong>
+              Runtime
+            </span>
+            <span>
+              <strong>${result.memory}KB</strong>
+              Memory
+            </span>
+          </div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1rem;">
+            ✓ Submission #${result.submissionId} saved to your history
+          </div>
+        </div>
+      `;
+
+      // Show test case details
+      if (!isAccepted && result.results) {
+        const failedTest = result.results.find(r => r.status !== 'Passed');
+        if (failedTest && !failedTest.isHidden) {
+          submissionResult.innerHTML += `
+            <div class="test-result failed" style="margin-top: 1rem;">
+              <div class="test-result-body">
+                <div class="test-result-header">
+                  <span style="color: var(--danger-color);">Test ${failedTest.testCase}: ${failedTest.status}</span>
+                </div>
+                ${failedTest.error ? `<div class="test-result-details console-error">${escapeHtml(failedTest.error)}</div>` : ''}
+                ${!failedTest.error ? `
+                  <div class="test-result-details">
+                    <div><strong>Input:</strong> ${JSON.stringify(failedTest.input)}</div>
+                    <div><strong>Expected:</strong> ${JSON.stringify(failedTest.expected)}</div>
+                    <div><strong>Got:</strong> ${JSON.stringify(failedTest.output)}</div>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        } else if (failedTest && failedTest.isHidden) {
+          submissionResult.innerHTML += `
+            <div class="test-result error" style="margin-top: 1rem;">
+              <div class="test-result-body">
+                <div class="test-result-header">
+                  <span style="color: var(--warning-color);">Failed on hidden test case</span>
+                </div>
+                ${failedTest.error ? `<p style="color: var(--text-secondary); margin-top: 0.5rem;">${escapeHtml(failedTest.error)}</p>` : ''}
+              </div>
+            </div>
+          `;
+        }
+      }
+    }
+
+    async function loadHistory() {
+      if (!currentUser) {
+        submissionHistory.innerHTML = `
+          <div class="login-prompt">
+            <p>🔒 Log in to see your submission history</p>
+            <a href="/login" class="btn btn-primary">Log In</a>
+          </div>
+        `;
+        return;
+      }
+
+      try {
+        const { submissions } = await API.getSubmissionHistory(problemSlug);
+        
+        if (submissions.length === 0) {
+          submissionHistory.innerHTML = `
+            <div class="no-submissions">
+              <div class="no-submissions-icon">📝</div>
+              <p>No submissions yet</p>
+              <p style="font-size: 0.85rem;">Submit your solution to see it here!</p>
+            </div>
+          `;
+          return;
+        }
+
+        const submissionsHtml = submissions.map(sub => {
+          const isAccepted = sub.status === 'Accepted';
+          const statusClass = isAccepted ? 'accepted' : 'rejected';
+          const statusIcon = isAccepted ? '✓' : '✗';
+          const statusColor = isAccepted ? 'var(--success-color)' : 'var(--danger-color)';
+          const date = new Date(sub.created_at);
+          const timeAgo = getTimeAgo(date);
+          const langDisplay = {
+            'javascript': 'JavaScript',
+            'python': 'Python',
+            'java': 'Java',
+            'cpp': 'C++',
+            'c': 'C',
+            'csharp': 'C#'
+          }[sub.language] || sub.language;
+          const escapedCode = escapeHtml(sub.code.replace(/'/g, "\\'").replace(/\n/g, '\\n'));
+          
+          return `
+            <div class="submission-item" onclick="loadSubmission(${sub.id}, '${escapedCode}', '${sub.language}')" title="Click to load this submission">
+              <div class="submission-status-icon ${statusClass}">
+                ${statusIcon}
+              </div>
+              <div class="submission-info">
+                <div class="submission-status-text" style="color: ${statusColor};">${sub.status}</div>
+                <div class="submission-meta">
+                  <span>📝 ${langDisplay}</span>
+                  <span>⏱ ${sub.runtime_ms}ms</span>
+                  <span>🕐 ${timeAgo}</span>
+                </div>
+              </div>
+              <div class="submission-actions">
+                <button class="submission-load-btn" onclick="event.stopPropagation(); loadSubmission(${sub.id}, '${escapedCode}', '${sub.language}')">
+                  Load Code
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        submissionHistory.innerHTML = `
+          <div class="submissions-header">
+            <h3 style="margin: 0; font-size: 1rem;">📋 Your Submissions</h3>
+            <span class="submissions-count">${submissions.length} submission${submissions.length !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="submission-list">
+            ${submissionsHtml}
+          </div>
+        `;
+      } catch (error) {
+        submissionHistory.innerHTML = `
+          <div class="no-submissions">
+            <div class="no-submissions-icon">⚠️</div>
+            <p style="color: var(--danger-color);">Failed to load history</p>
+          </div>
+        `;
+      }
+    }
+
+    function loadSubmission(id, code, language) {
+      // Unescape the code and load it into the editor
+      codeEditor.value = code.replace(/\\n/g, '\n').replace(/\\'/g, "'");
+      // Set the language if provided
+      if (language && languageSelect.querySelector(`option[value="${language}"]`)) {
+        languageSelect.value = language;
+      }
+      // Switch to the Description tab to show we're back to editing
+      document.querySelector('.problem-tab[data-tab="description"]').click();
+      // Switch to sample tests tab in results
+      document.querySelector('.results-tab[data-tab="testcases"]').click();
+      // Scroll editor into view
+      codeEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    // Initialize
+    loadProblem();
+    
+    // Set initial state for submissions tab (will be loaded when tab is clicked)
+    submissionHistory.innerHTML = `
+      <div class="no-submissions">
+        <div class="no-submissions-icon">📋</div>
+        <p style="color: var(--text-secondary);">Click to view your submission history</p>
+      </div>
+    `;
+  </script>
+</body>
+</html>

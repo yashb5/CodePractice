@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log In - CodePractice</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-card card">
+      <div class="card-body">
+        <div class="auth-header">
+          <a href="/" class="logo" style="justify-content: center; margin-bottom: 1rem;">
+            <span class="logo-icon">⟨/⟩</span>
+            CodePractice
+          </a>
+          <h1>Welcome Back</h1>
+          <p>Log in to continue your coding journey</p>
+        </div>
+
+        <div id="error-message" class="alert alert-error hidden"></div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label" for="username">Username or Email</label>
+            <input type="text" id="username" name="username" class="form-input" placeholder="Enter your username or email" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-input" placeholder="Enter your password" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;" id="submit-btn">
+            Log In
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          Don't have an account? <a href="/signup">Sign up</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    const form = document.getElementById('login-form');
+    const errorMessage = document.getElementById('error-message');
+    const submitBtn = document.getElementById('submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      errorMessage.classList.add('hidden');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> Logging in...';
+
+      try {
+        await API.login(username, password);
+        window.location.href = '/problems';
+      } catch (error) {
+        errorMessage.textContent = error.message;
+        errorMessage.classList.remove('hidden');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Log In';
+      }
+    });
+
+    // Redirect if already logged in
+    checkAuth().then(user => {
+      if (user) {
+        window.location.href = '/problems';
+      }
+    });
+  </script>
+</body>
+</html>

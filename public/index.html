@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CodePractice - Master Your Coding Skills</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    .feature-card {
+      text-align: center;
+      padding: 2rem;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .feature-card.clickable {
+      cursor: pointer;
+    }
+
+    .feature-card.clickable:hover {
+      transform: translateY(-4px);
+      border-color: var(--primary-color);
+      box-shadow: 0 8px 24px rgba(99, 102, 241, 0.15);
+    }
+
+    .feature-card.clickable::after {
+      content: '→';
+      position: absolute;
+      bottom: 1rem;
+      right: 1.5rem;
+      opacity: 0;
+      transition: opacity 0.2s, transform 0.2s;
+      color: var(--primary-color);
+      font-size: 1.25rem;
+    }
+
+    .feature-card.clickable:hover::after {
+      opacity: 1;
+      transform: translateX(4px);
+    }
+
+    .feature-card-hint {
+      font-size: 0.75rem;
+      color: var(--primary-color);
+      margin-top: 0.75rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .feature-card.clickable:hover .feature-card-hint {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="/" class="logo">
+        <span class="logo-icon">⟨/⟩</span>
+        CodePractice
+      </a>
+      <nav class="nav">
+        <a href="/problems" class="nav-link">Problems</a>
+        <div id="auth-nav">
+          <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
+          <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+        <div id="user-nav" class="user-info hidden">
+          <span class="username">Welcome, <span id="nav-username"></span></span>
+          <button onclick="handleLogout()" class="btn btn-secondary btn-sm">Log Out</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section style="text-align: center; padding: 6rem 2rem;">
+      <div class="container">
+        <h1 style="font-size: 3rem; margin-bottom: 1.5rem;">Master Your Coding Skills</h1>
+        <p style="font-size: 1.25rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem;">
+          Practice coding problems, improve your algorithmic thinking, and prepare for technical interviews.
+        </p>
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+          <a href="/problems" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1rem;">
+            Start Practicing
+          </a>
+          <a href="/signup" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1rem;">
+            Create Account
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding: 4rem 2rem; background-color: var(--surface-color);">
+      <div class="container">
+        <h2 style="text-align: center; margin-bottom: 3rem;">Why CodePractice?</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
+          <div class="card feature-card" id="card-problems" onclick="navigateIfLoggedIn('/problems')">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">📝</div>
+            <h3 style="margin-bottom: 0.5rem;">Curated Problems</h3>
+            <p style="color: var(--text-secondary);">Problems ranging from Easy to Hard, covering essential algorithms and data structures.</p>
+            <p class="feature-card-hint">Click to browse problems</p>
+          </div>
+          <div class="card feature-card" id="card-feedback" onclick="navigateIfLoggedIn('/problems')">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚡</div>
+            <h3 style="margin-bottom: 0.5rem;">Instant Feedback</h3>
+            <p style="color: var(--text-secondary);">Run your code against test cases and get immediate results with runtime metrics.</p>
+            <p class="feature-card-hint">Click to try a problem</p>
+          </div>
+          <div class="card feature-card" id="card-progress" onclick="navigateIfLoggedIn('/progress')">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem;">📊</div>
+            <h3 style="margin-bottom: 0.5rem;">Track Progress</h3>
+            <p style="color: var(--text-secondary);">View your submission history and track your improvement over time.</p>
+            <p class="feature-card-hint">Click to view your progress</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="padding: 4rem 2rem;">
+      <div class="container" style="text-align: center;">
+        <h2 style="margin-bottom: 1rem;">Ready to Start?</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+          Jump into coding challenges and level up your programming skills today.
+        </p>
+        <a href="/problems" class="btn btn-success" style="padding: 1rem 2rem; font-size: 1rem;">
+          Browse Problems
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer style="text-align: center; padding: 2rem; border-top: 1px solid var(--border-color); color: var(--text-secondary);">
+    <p>&copy; 2024 CodePractice. Built for learning and practice.</p>
+  </footer>
+
+  <script src="/js/api.js"></script>
+  <script>
+    // Wait for auth check and then update feature cards
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Wait for auth to be checked
+      await new Promise(resolve => setTimeout(resolve, 300));
+      updateFeatureCards();
+    });
+
+    function updateFeatureCards() {
+      const cards = document.querySelectorAll('.feature-card');
+      
+      if (currentUser) {
+        // Make cards clickable for logged-in users
+        cards.forEach(card => {
+          card.classList.add('clickable');
+        });
+      } else {
+        // Remove clickable state for non-logged-in users
+        cards.forEach(card => {
+          card.classList.remove('clickable');
+        });
+      }
+    }
+
+    function navigateIfLoggedIn(url) {
+      if (currentUser) {
+        window.location.href = url;
+      } else {
+        // Optionally redirect to login
+        if (confirm('Please log in to access this feature. Would you like to log in now?')) {
+          window.location.href = '/login';
+        }
+      }
+    }
+  </script>
+</body>
+</html>
