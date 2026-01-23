@@ -8,6 +8,7 @@ const { attachUser } = require('./middleware/auth');
 const authRoutes = require('./routes/auth')(db);
 const problemsRoutes = require('./routes/problems')(db);
 const submissionsRoutes = require('./routes/submissions')(db);
+const bookmarksRoutes = require('./routes/bookmarks')(db);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -36,6 +37,7 @@ app.use(attachUser(db));
 app.use('/api/auth', authRoutes);
 app.use('/api/problems', problemsRoutes);
 app.use('/api/submissions', submissionsRoutes);
+app.use('/api/bookmarks', bookmarksRoutes);
 
 // Serve HTML pages
 app.get('/', (req, res) => {
@@ -60,6 +62,10 @@ app.get('/problem/:slug', (req, res) => {
 
 app.get('/progress', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'progress.html'));
+});
+
+app.get('/bookmarks', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'bookmarks.html'));
 });
 
 // Error handling

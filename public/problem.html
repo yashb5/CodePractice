@@ -358,6 +358,132 @@
       color: var(--text-secondary);
       margin-bottom: 1rem;
     }
+
+    /* Bookmark Button Styles */
+    .bookmark-container {
+      position: relative;
+      margin-left: auto;
+    }
+
+    .bookmark-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background-color: var(--surface-light);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .bookmark-btn:hover {
+      background-color: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .bookmark-btn.bookmarked {
+      background-color: rgba(245, 158, 11, 0.15);
+      border-color: #f59e0b;
+      color: #f59e0b;
+    }
+
+    .bookmark-btn .bookmark-icon {
+      font-size: 1.1rem;
+    }
+
+    .bookmark-dropdown {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      right: 0;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      min-width: 250px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .bookmark-dropdown.hidden {
+      display: none;
+    }
+
+    .bookmark-dropdown-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--surface-light);
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    .bookmark-dropdown-list {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .bookmark-list-option {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      font-size: 0.85rem;
+    }
+
+    .bookmark-list-option:hover {
+      background-color: var(--surface-light);
+    }
+
+    .bookmark-list-option.active {
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+
+    .bookmark-list-icon {
+      font-size: 1.1rem;
+    }
+
+    .bookmark-list-color {
+      width: 4px;
+      height: 20px;
+      border-radius: 2px;
+    }
+
+    .bookmark-list-name {
+      flex: 1;
+    }
+
+    .bookmark-list-check {
+      color: var(--success-color);
+      font-size: 1rem;
+    }
+
+    .bookmark-dropdown-footer {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border-color);
+      background-color: var(--surface-light);
+    }
+
+    .bookmark-dropdown-footer a {
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+    }
+
+    .problem-header-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .problem-header-left {
+      flex: 1;
+    }
   </style>
 </head>
 <body>
@@ -369,7 +495,9 @@
       </a>
       <nav class="nav">
         <a href="/problems" class="nav-link">Problems</a>
-        <div id="auth-nav">
+        <a href="/bookmarks" class="nav-link">Bookmarks</a>
+        <a href="/progress" class="nav-link">Progress</a>
+        <div id="auth-nav" class="hidden">
           <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
           <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
         </div>
@@ -390,11 +518,32 @@
       </div>
       <div id="problem-content" class="hidden">
         <div class="problem-header">
-          <h1>
-            <span id="problem-title"></span>
-            <span id="problem-difficulty" class="difficulty"></span>
-          </h1>
-          <div class="problem-topics" id="problem-topics"></div>
+          <div class="problem-header-top">
+            <div class="problem-header-left">
+              <h1>
+                <span id="problem-title"></span>
+                <span id="problem-difficulty" class="difficulty"></span>
+              </h1>
+              <div class="problem-topics" id="problem-topics"></div>
+            </div>
+            
+            <!-- Bookmark Button -->
+            <div class="bookmark-container" id="bookmark-container">
+              <button class="bookmark-btn" id="bookmark-btn" onclick="toggleBookmarkDropdown()">
+                <span class="bookmark-icon" id="bookmark-icon">🔖</span>
+                <span id="bookmark-text">Bookmark</span>
+              </button>
+              <div class="bookmark-dropdown hidden" id="bookmark-dropdown">
+                <div class="bookmark-dropdown-header">Add to list</div>
+                <div class="bookmark-dropdown-list" id="bookmark-lists">
+                  <!-- Lists will be rendered here -->
+                </div>
+                <div class="bookmark-dropdown-footer">
+                  <a href="/bookmarks">📑 Manage all bookmarks</a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         
         <!-- Problem Tabs -->
@@ -617,6 +766,11 @@
 
         problemLoading.classList.add('hidden');
         problemContent.classList.remove('hidden');
+
+        // Load bookmark data if user is logged in
+        if (currentUser) {
+          loadBookmarkData();
+        }
       } catch (error) {
         problemLoading.innerHTML = `
           <p style="color: var(--danger-color);">Failed to load problem: ${error.message}</p>
@@ -1011,8 +1165,205 @@
       codeEditor.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
+    // ==================== BOOKMARK FUNCTIONALITY ====================
+    let bookmarkLists = [];
+    let problemBookmarks = [];
+
+    const bookmarkBtn = document.getElementById('bookmark-btn');
+    const bookmarkIcon = document.getElementById('bookmark-icon');
+    const bookmarkText = document.getElementById('bookmark-text');
+    const bookmarkDropdown = document.getElementById('bookmark-dropdown');
+    const bookmarkListsContainer = document.getElementById('bookmark-lists');
+    const bookmarkContainer = document.getElementById('bookmark-container');
+
+    function toggleBookmarkDropdown() {
+      if (!currentUser) {
+        alert('Please log in to bookmark problems');
+        window.location.href = '/login';
+        return;
+      }
+      bookmarkDropdown.classList.toggle('hidden');
+    }
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!bookmarkContainer.contains(e.target)) {
+        bookmarkDropdown.classList.add('hidden');
+      }
+    });
+
+    async function loadBookmarkData() {
+      if (!currentUser || !problem) return;
+
+      try {
+        // Load lists and current bookmark status
+        const [listsResult, bookmarksResult] = await Promise.all([
+          API.getBookmarkLists(),
+          API.getProblemBookmarks(problem.id)
+        ]);
+
+        bookmarkLists = listsResult.lists;
+        problemBookmarks = bookmarksResult.bookmarks;
+
+        renderBookmarkLists();
+        updateBookmarkButton();
+      } catch (error) {
+        console.error('Failed to load bookmark data:', error);
+      }
+    }
+
+    function renderBookmarkLists() {
+      if (bookmarkLists.length === 0) {
+        bookmarkListsContainer.innerHTML = `
+          <div style="padding: 1rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+            No lists yet. <a href="/bookmarks">Create one</a>
+          </div>
+        `;
+        return;
+      }
+
+      const isCurrentlyBookmarked = problemBookmarks.length > 0;
+      const currentListIds = problemBookmarks.map(b => b.list_id);
+
+      // Show different UI based on bookmark state
+      let html = '';
+      
+      if (isCurrentlyBookmarked && problemBookmarks.length === 1) {
+        // If bookmarked to exactly one list, show "Move to" options
+        const currentBookmark = problemBookmarks[0];
+        const currentList = bookmarkLists.find(l => l.id === currentBookmark.list_id);
+        
+        html += `
+          <div style="padding: 0.5rem 1rem; font-size: 0.75rem; color: var(--text-secondary); border-bottom: 1px solid var(--border-color);">
+            Currently in: <strong style="color: var(--text-primary);">${escapeHtml(currentList?.name || 'Unknown')}</strong>
+          </div>
+          <div style="padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-secondary); background-color: var(--surface-light);">
+            Move to another list:
+          </div>
+        `;
+        
+        html += bookmarkLists.map(list => {
+          const isCurrent = list.id === currentBookmark.list_id;
+          return `
+            <div class="bookmark-list-option ${isCurrent ? 'active' : ''}" 
+                 onclick="${isCurrent ? '' : `moveBookmarkToList(${currentBookmark.id}, ${list.id}, '${escapeHtml(list.name)}')`}"
+                 style="${isCurrent ? 'opacity: 0.6; cursor: default;' : ''}"
+                 data-list-id="${list.id}">
+              <div class="bookmark-list-color" style="background-color: ${list.color};"></div>
+              <span class="bookmark-list-icon">${list.icon}</span>
+              <span class="bookmark-list-name">${escapeHtml(list.name)}</span>
+              ${isCurrent ? '<span class="bookmark-list-check">✓ Current</span>' : ''}
+            </div>
+          `;
+        }).join('');
+        
+        html += `
+          <div style="padding: 0.75rem 1rem; border-top: 1px solid var(--border-color);">
+            <button onclick="toggleBookmarkInList(${currentBookmark.list_id}, true)" 
+                    style="width: 100%; padding: 0.5rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger-color); border-radius: 0.375rem; color: var(--danger-color); font-size: 0.8rem; cursor: pointer;">
+              🗑️ Remove bookmark
+            </button>
+          </div>
+        `;
+      } else {
+        // Multiple bookmarks or none - show add/remove checkboxes
+        html += bookmarkLists.map(list => {
+          const isBookmarked = currentListIds.includes(list.id);
+          return `
+            <div class="bookmark-list-option ${isBookmarked ? 'active' : ''}" 
+                 onclick="toggleBookmarkInList(${list.id}, ${isBookmarked})"
+                 data-list-id="${list.id}">
+              <div class="bookmark-list-color" style="background-color: ${list.color};"></div>
+              <span class="bookmark-list-icon">${list.icon}</span>
+              <span class="bookmark-list-name">${escapeHtml(list.name)}</span>
+              ${isBookmarked ? '<span class="bookmark-list-check">✓</span>' : ''}
+            </div>
+          `;
+        }).join('');
+      }
+      
+      bookmarkListsContainer.innerHTML = html;
+    }
+
+    async function moveBookmarkToList(bookmarkId, newListId, newListName) {
+      try {
+        await API.updateBookmark(bookmarkId, { listId: newListId });
+        showSuccessToast('Bookmark moved', `Moved to "${newListName}"`);
+        await loadBookmarkData();
+        bookmarkDropdown.classList.add('hidden');
+      } catch (error) {
+        console.error('Failed to move bookmark:', error);
+        if (error.message.includes('already bookmarked')) {
+          showWarningToast('Already in list', `This problem is already in "${newListName}"`);
+        } else {
+          showErrorToast('Move failed', error.message);
+        }
+        await loadBookmarkData();
+      }
+    }
+
+    function updateBookmarkButton() {
+      const isBookmarked = problemBookmarks.length > 0;
+      if (isBookmarked) {
+        bookmarkBtn.classList.add('bookmarked');
+        bookmarkIcon.textContent = '⭐';
+        bookmarkText.textContent = `Saved (${problemBookmarks.length})`;
+      } else {
+        bookmarkBtn.classList.remove('bookmarked');
+        bookmarkIcon.textContent = '🔖';
+        bookmarkText.textContent = 'Bookmark';
+      }
+    }
+
+    async function toggleBookmarkInList(listId, isCurrentlyBookmarked) {
+      if (!problem) return;
+
+      // Find the list name for better error messages
+      const list = bookmarkLists.find(l => l.id === listId);
+      const listName = list ? list.name : 'this list';
+
+      try {
+        if (isCurrentlyBookmarked) {
+          // Remove bookmark
+          const bookmark = problemBookmarks.find(b => b.list_id === listId);
+          if (bookmark) {
+            await API.removeBookmark(bookmark.id);
+            showSuccessToast('Bookmark removed', `Removed from "${listName}"`);
+          }
+        } else {
+          // Add bookmark
+          await API.addBookmark(problem.id, listId);
+          showSuccessToast('Bookmark added', `Added to "${listName}"`);
+        }
+
+        // Reload bookmark data
+        await loadBookmarkData();
+      } catch (error) {
+        console.error('Failed to toggle bookmark:', error);
+        
+        // Check for duplicate bookmark error
+        if (error.message.includes('already bookmarked')) {
+          showWarningToast('Already bookmarked', `This problem is already in "${listName}"`);
+        } else {
+          showErrorToast('Bookmark failed', error.message);
+        }
+        
+        // Reload to sync UI state
+        await loadBookmarkData();
+      }
+    }
+
+    // ==================== END BOOKMARK FUNCTIONALITY ====================
+
     // Initialize
     loadProblem();
+    
+    // Load bookmark data after auth check
+    setTimeout(async () => {
+      if (currentUser && problem) {
+        await loadBookmarkData();
+      }
+    }, 500);
     
     // Set initial state for submissions tab (will be loaded when tab is clicked)
     submissionHistory.innerHTML = `

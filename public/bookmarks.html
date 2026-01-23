@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Bookmarks - CodePractice</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    .bookmarks-page {
+      display: flex;
+      min-height: calc(100vh - 65px);
+    }
+
+    /* Sidebar */
+    .bookmarks-sidebar {
+      width: 280px;
+      min-width: 280px;
+      background-color: var(--surface-color);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .sidebar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--surface-light);
+    }
+
+    .sidebar-header h2 {
+      font-size: 1rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .add-list-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 0.375rem;
+      font-size: 1.25rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .add-list-btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .lists-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      margin-bottom: 0.25rem;
+      border: 1px solid transparent;
+    }
+
+    .list-item:hover {
+      background-color: var(--surface-light);
+    }
+
+    .list-item.active {
+      background-color: var(--surface-light);
+      border-color: var(--primary-color);
+    }
+
+    .list-icon {
+      font-size: 1.25rem;
+      margin-right: 0.75rem;
+    }
+
+    .list-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-name {
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .list-count {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    .list-color-indicator {
+      width: 4px;
+      height: 24px;
+      border-radius: 2px;
+      margin-right: 0.75rem;
+    }
+
+    .list-actions {
+      display: flex;
+      gap: 0.25rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .list-item:hover .list-actions {
+      opacity: 1;
+    }
+
+    .list-action-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: transparent;
+      border: none;
+      border-radius: 0.25rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .list-action-btn:hover {
+      background-color: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .list-action-btn.delete:hover {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: var(--danger-color);
+    }
+
+    /* Main content */
+    .bookmarks-main {
+      flex: 1;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .bookmarks-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .bookmarks-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .bookmarks-title h1 {
+      font-size: 1.5rem;
+      margin: 0;
+    }
+
+    .bookmarks-title-icon {
+      font-size: 1.5rem;
+    }
+
+    .bookmarks-description {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .bookmarks-count {
+      background-color: var(--surface-color);
+      padding: 0.5rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    /* Filter and Sort Controls */
+    .filter-sort-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 1rem;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .filter-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .filter-select {
+      padding: 0.5rem 0.75rem;
+      background-color: var(--background-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      cursor: pointer;
+      min-width: 120px;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+
+    .sort-btn {
+      padding: 0.5rem 0.75rem;
+      background-color: var(--background-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+    }
+
+    .sort-btn:hover {
+      background-color: var(--surface-light);
+      color: var(--text-primary);
+    }
+
+    .sort-btn.active {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+
+    .clear-filters-btn {
+      padding: 0.5rem 0.75rem;
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    .clear-filters-btn:hover {
+      background-color: var(--surface-light);
+      color: var(--text-primary);
+    }
+
+    .export-btn {
+      padding: 0.5rem 1rem;
+      background-color: var(--success-color);
+      border: none;
+      border-radius: 0.375rem;
+      color: white;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+      margin-left: auto;
+    }
+
+    .export-btn:hover {
+      background-color: #059669;
+    }
+
+    .export-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .filter-divider {
+      width: 1px;
+      height: 24px;
+      background-color: var(--border-color);
+    }
+
+    @media (max-width: 768px) {
+      .filter-sort-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-group {
+        width: 100%;
+      }
+
+      .filter-select {
+        flex: 1;
+      }
+
+      .filter-divider {
+        display: none;
+      }
+
+      .clear-filters-btn {
+        margin-left: 0;
+        width: 100%;
+      }
+    }
+
+    /* Bookmark grid */
+    .bookmarks-grid {
+      display: grid;
+      gap: 1rem;
+    }
+
+    .bookmark-card {
+      display: flex;
+      align-items: center;
+      padding: 1rem 1.25rem;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      transition: all 0.2s;
+    }
+
+    .bookmark-card:hover {
+      border-color: var(--primary-color);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .bookmark-problem-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bookmark-problem-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      font-size: 1rem;
+      margin-bottom: 0.375rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .bookmark-problem-title a {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .bookmark-problem-title a:hover {
+      color: var(--primary-color);
+    }
+
+    .bookmark-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .bookmark-topics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.375rem;
+      margin-top: 0.5rem;
+    }
+
+    .bookmark-topic-tag {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      background-color: var(--surface-light);
+      border-radius: 1rem;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+    }
+
+    .bookmark-list-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.625rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      margin-left: auto;
+      margin-right: 1rem;
+    }
+
+    .bookmark-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .bookmark-action-btn {
+      padding: 0.5rem 0.75rem;
+      background-color: var(--surface-light);
+      border: 1px solid var(--border-color);
+      border-radius: 0.375rem;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      transition: all 0.2s;
+    }
+
+    .bookmark-action-btn:hover {
+      background-color: var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .bookmark-action-btn.delete:hover {
+      background-color: rgba(239, 68, 68, 0.2);
+      border-color: var(--danger-color);
+      color: var(--danger-color);
+    }
+
+    .bookmark-action-btn.solve {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: white;
+    }
+
+    .bookmark-action-btn.solve:hover {
+      background-color: var(--primary-hover);
+    }
+
+    /* Empty state */
+    .empty-bookmarks {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-secondary);
+    }
+
+    .empty-bookmarks-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .empty-bookmarks h3 {
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background-color: var(--surface-color);
+      border-radius: 0.75rem;
+      width: 100%;
+      max-width: 450px;
+      max-height: 90vh;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      background-color: var(--surface-light);
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--text-primary);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border-color);
+      background-color: var(--surface-light);
+    }
+
+    /* Color picker */
+    .color-picker {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .color-option {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .color-option:hover {
+      transform: scale(1.1);
+    }
+
+    .color-option.selected {
+      border-color: white;
+      box-shadow: 0 0 0 2px var(--primary-color);
+    }
+
+    /* Icon picker */
+    .icon-picker {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+
+    .icon-option {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      border-radius: 0.5rem;
+      border: 2px solid transparent;
+      background-color: var(--surface-light);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .icon-option:hover {
+      background-color: var(--border-color);
+    }
+
+    .icon-option.selected {
+      border-color: var(--primary-color);
+      background-color: rgba(59, 130, 246, 0.2);
+    }
+
+    /* Login required */
+    .login-required {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100vh - 65px);
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .login-required-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .login-required h2 {
+      margin-bottom: 0.5rem;
+    }
+
+    .login-required p {
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Move to list dropdown */
+    .move-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background-color: var(--surface-color);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      min-width: 200px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .move-dropdown.hidden {
+      display: none;
+    }
+
+    .move-dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      color: var(--text-primary);
+      font-size: 0.85rem;
+    }
+
+    .move-dropdown-item:hover {
+      background-color: var(--surface-light);
+    }
+
+    .move-dropdown-item.current {
+      background-color: rgba(59, 130, 246, 0.1);
+      color: var(--primary-color);
+    }
+
+    .move-actions-wrapper {
+      position: relative;
+    }
+
+    @media (max-width: 768px) {
+      .bookmarks-page {
+        flex-direction: column;
+      }
+
+      .bookmarks-sidebar {
+        width: 100%;
+        min-width: 100%;
+        max-height: 200px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .lists-container {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 0.5rem;
+        gap: 0.5rem;
+      }
+
+      .list-item {
+        flex-shrink: 0;
+        margin-bottom: 0;
+      }
+
+      .bookmarks-main {
+        padding: 1rem;
+      }
+
+      .bookmark-list-badge {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="container">
+      <a href="/" class="logo">
+        <span class="logo-icon">⟨/⟩</span>
+        CodePractice
+      </a>
+      <nav class="nav">
+        <a href="/problems" class="nav-link">Problems</a>
+        <a href="/bookmarks" class="nav-link" style="color: var(--primary-color);">Bookmarks</a>
+        <a href="/progress" class="nav-link">Progress</a>
+        <div id="auth-nav" class="hidden">
+          <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
+          <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
+        </div>
+        <div id="user-nav" class="user-info hidden">
+          <span class="username">Welcome, <span id="nav-username"></span></span>
+          <button onclick="handleLogout()" class="btn btn-secondary btn-sm">Log Out</button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Loading State -->
+  <div id="loading-state" style="text-align: center; padding: 4rem;">
+    <div class="spinner" style="margin: 0 auto 1rem;"></div>
+    <p>Loading your bookmarks...</p>
+  </div>
+
+  <!-- Login Required -->
+  <div id="login-required" class="login-required hidden">
+    <div class="login-required-icon">🔐</div>
+    <h2>Login Required</h2>
+    <p>Please log in to access your bookmarks and problem lists.</p>
+    <div>
+      <a href="/login" class="btn btn-primary">Log In</a>
+      <a href="/signup" class="btn btn-secondary" style="margin-left: 0.5rem;">Sign Up</a>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main id="bookmarks-content" class="bookmarks-page hidden">
+    <!-- Sidebar -->
+    <aside class="bookmarks-sidebar">
+      <div class="sidebar-header">
+        <h2>📑 My Lists</h2>
+        <button class="add-list-btn" onclick="openCreateListModal()" title="Create new list">+</button>
+      </div>
+      <div class="lists-container" id="lists-container">
+        <!-- Lists will be rendered here -->
+      </div>
+    </aside>
+
+    <!-- Main area -->
+    <div class="bookmarks-main">
+      <div class="bookmarks-header">
+        <div>
+          <div class="bookmarks-title">
+            <span class="bookmarks-title-icon" id="current-list-icon">📚</span>
+            <h1 id="current-list-name">All Bookmarks</h1>
+          </div>
+          <p class="bookmarks-description" id="current-list-description">All your bookmarked problems</p>
+        </div>
+        <span class="bookmarks-count" id="bookmarks-count">0 problems</span>
+      </div>
+
+      <!-- Filter and Sort Controls -->
+      <div class="filter-sort-bar" id="filter-sort-bar">
+        <div class="filter-group">
+          <span class="filter-label">Difficulty:</span>
+          <select class="filter-select" id="filter-difficulty" onchange="applyFilters()">
+            <option value="">All</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <span class="filter-label">Topic:</span>
+          <select class="filter-select" id="filter-topic" onchange="applyFilters()">
+            <option value="">All Topics</option>
+            <!-- Topics will be populated dynamically -->
+          </select>
+        </div>
+
+        <div class="filter-divider"></div>
+
+        <div class="filter-group">
+          <span class="filter-label">Sort by:</span>
+          <select class="filter-select" id="sort-field" onchange="applyFilters()">
+            <option value="created_at">Date Added</option>
+            <option value="title">Title</option>
+            <option value="difficulty">Difficulty</option>
+          </select>
+        </div>
+
+        <button class="sort-btn" id="sort-order-btn" onclick="toggleSortOrder()">
+          <span id="sort-order-icon">↓</span>
+          <span id="sort-order-text">Newest</span>
+        </button>
+
+        <button class="clear-filters-btn" id="clear-filters-btn" onclick="clearFilters()" style="display: none;">
+          ✕ Clear Filters
+        </button>
+
+        <button class="export-btn" id="export-btn" onclick="exportBookmarks()" title="Export bookmarks as JSON">
+          📥 Export
+        </button>
+      </div>
+
+      <div class="bookmarks-grid" id="bookmarks-grid">
+        <!-- Bookmarks will be rendered here -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Create/Edit List Modal -->
+  <div id="list-modal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Create New List</h3>
+        <button class="modal-close" onclick="closeListModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">List Name *</label>
+          <input type="text" id="list-name-input" class="form-input" placeholder="e.g., Interview Prep" maxlength="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description</label>
+          <input type="text" id="list-description-input" class="form-input" placeholder="Optional description">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Color</label>
+          <div class="color-picker" id="color-picker">
+            <div class="color-option selected" data-color="#3b82f6" style="background-color: #3b82f6;"></div>
+            <div class="color-option" data-color="#10b981" style="background-color: #10b981;"></div>
+            <div class="color-option" data-color="#f59e0b" style="background-color: #f59e0b;"></div>
+            <div class="color-option" data-color="#ef4444" style="background-color: #ef4444;"></div>
+            <div class="color-option" data-color="#ec4899" style="background-color: #ec4899;"></div>
+            <div class="color-option" data-color="#8b5cf6" style="background-color: #8b5cf6;"></div>
+            <div class="color-option" data-color="#06b6d4" style="background-color: #06b6d4;"></div>
+            <div class="color-option" data-color="#84cc16" style="background-color: #84cc16;"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Icon</label>
+          <div class="icon-picker" id="icon-picker">
+            <div class="icon-option selected" data-icon="📚">📚</div>
+            <div class="icon-option" data-icon="🔄">🔄</div>
+            <div class="icon-option" data-icon="💼">💼</div>
+            <div class="icon-option" data-icon="🔥">🔥</div>
+            <div class="icon-option" data-icon="⭐">⭐</div>
+            <div class="icon-option" data-icon="📝">📝</div>
+            <div class="icon-option" data-icon="🎯">🎯</div>
+            <div class="icon-option" data-icon="💡">💡</div>
+            <div class="icon-option" data-icon="🚀">🚀</div>
+            <div class="icon-option" data-icon="📌">📌</div>
+            <div class="icon-option" data-icon="🏆">🏆</div>
+            <div class="icon-option" data-icon="💪">💪</div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeListModal()">Cancel</button>
+        <button class="btn btn-primary" id="save-list-btn" onclick="saveList()">Create List</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Delete Modal -->
+  <div id="delete-modal" class="modal-overlay hidden">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3>Delete List</h3>
+        <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete "<strong id="delete-list-name"></strong>"?</p>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">
+          This will remove all bookmarks in this list. This action cannot be undone.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="confirmDeleteList()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let allLists = [];
+    let allBookmarks = [];
+    let availableTopics = [];
+    let currentFilters = {
+      difficulty: '',
+      topic: '',
+      sortBy: 'created_at',
+      sortOrder: 'desc'
+    };
+    let currentListId = null;
+    let editingListId = null;
+    let deleteListId = null;
+    let selectedColor = '#3b82f6';
+    let selectedIcon = '📚';
+
+    const loadingState = document.getElementById('loading-state');
+    const loginRequired = document.getElementById('login-required');
+    const bookmarksContent = document.getElementById('bookmarks-content');
+    const listsContainer = document.getElementById('lists-container');
+    const bookmarksGrid = document.getElementById('bookmarks-grid');
+    const bookmarksCount = document.getElementById('bookmarks-count');
+    const currentListName = document.getElementById('current-list-name');
+    const currentListIcon = document.getElementById('current-list-icon');
+    const currentListDescription = document.getElementById('current-list-description');
+
+    // Color picker handlers
+    document.querySelectorAll('.color-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedColor = option.dataset.color;
+      });
+    });
+
+    // Icon picker handlers
+    document.querySelectorAll('.icon-option').forEach(option => {
+      option.addEventListener('click', () => {
+        document.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
+        option.classList.add('selected');
+        selectedIcon = option.dataset.icon;
+      });
+    });
+
+    async function initPage() {
+      // Wait for auth check
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      if (!currentUser) {
+        loadingState.classList.add('hidden');
+        loginRequired.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        await loadLists();
+        await loadBookmarks();
+        
+        loadingState.classList.add('hidden');
+        bookmarksContent.classList.remove('hidden');
+      } catch (error) {
+        console.error('Failed to load bookmarks:', error);
+        loadingState.innerHTML = `
+          <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+          <p style="color: var(--danger-color);">Failed to load bookmarks. Please try again.</p>
+        `;
+      }
+    }
+
+    async function loadLists() {
+      const { lists } = await API.getBookmarkLists();
+      allLists = lists;
+      renderLists();
+    }
+
+    async function loadBookmarks(listId = null, preserveFilters = false) {
+      currentListId = listId;
+      
+      // Build query params
+      const params = new URLSearchParams();
+      if (listId) params.append('listId', listId);
+      if (currentFilters.difficulty) params.append('difficulty', currentFilters.difficulty);
+      if (currentFilters.topic) params.append('topic', currentFilters.topic);
+      if (currentFilters.sortBy) params.append('sortBy', currentFilters.sortBy);
+      if (currentFilters.sortOrder) params.append('sortOrder', currentFilters.sortOrder);
+      
+      const url = '/api/bookmarks' + (params.toString() ? '?' + params.toString() : '');
+      const response = await API.request(url);
+      
+      allBookmarks = response.bookmarks;
+      availableTopics = response.availableTopics || [];
+      
+      // Update topic dropdown
+      updateTopicDropdown();
+      
+      renderBookmarks();
+      updateHeader();
+      updateClearFiltersButton();
+    }
+    
+    function updateTopicDropdown() {
+      const topicSelect = document.getElementById('filter-topic');
+      const currentTopic = topicSelect.value;
+      
+      topicSelect.innerHTML = '<option value="">All Topics</option>';
+      availableTopics.forEach(topic => {
+        const option = document.createElement('option');
+        option.value = topic;
+        option.textContent = topic;
+        if (topic === currentTopic) option.selected = true;
+        topicSelect.appendChild(option);
+      });
+    }
+    
+    function applyFilters() {
+      currentFilters.difficulty = document.getElementById('filter-difficulty').value;
+      currentFilters.topic = document.getElementById('filter-topic').value;
+      currentFilters.sortBy = document.getElementById('sort-field').value;
+      
+      // Update sort order text based on sort field
+      updateSortOrderText();
+      
+      loadBookmarks(currentListId, true);
+    }
+    
+    function toggleSortOrder() {
+      currentFilters.sortOrder = currentFilters.sortOrder === 'desc' ? 'asc' : 'desc';
+      updateSortOrderText();
+      loadBookmarks(currentListId, true);
+    }
+    
+    function updateSortOrderText() {
+      const icon = document.getElementById('sort-order-icon');
+      const text = document.getElementById('sort-order-text');
+      const sortField = currentFilters.sortBy;
+      
+      if (currentFilters.sortOrder === 'desc') {
+        icon.textContent = '↓';
+        if (sortField === 'created_at') text.textContent = 'Newest';
+        else if (sortField === 'title') text.textContent = 'Z-A';
+        else if (sortField === 'difficulty') text.textContent = 'Hard first';
+      } else {
+        icon.textContent = '↑';
+        if (sortField === 'created_at') text.textContent = 'Oldest';
+        else if (sortField === 'title') text.textContent = 'A-Z';
+        else if (sortField === 'difficulty') text.textContent = 'Easy first';
+      }
+    }
+    
+    function clearFilters() {
+      currentFilters = {
+        difficulty: '',
+        topic: '',
+        sortBy: 'created_at',
+        sortOrder: 'desc'
+      };
+      
+      document.getElementById('filter-difficulty').value = '';
+      document.getElementById('filter-topic').value = '';
+      document.getElementById('sort-field').value = 'created_at';
+      updateSortOrderText();
+      
+      loadBookmarks(currentListId, false);
+    }
+    
+    function updateClearFiltersButton() {
+      const btn = document.getElementById('clear-filters-btn');
+      const hasFilters = currentFilters.difficulty || currentFilters.topic || 
+                         currentFilters.sortBy !== 'created_at' || currentFilters.sortOrder !== 'desc';
+      btn.style.display = hasFilters ? 'block' : 'none';
+    }
+
+    async function exportBookmarks() {
+      const exportBtn = document.getElementById('export-btn');
+      const originalText = exportBtn.innerHTML;
+      
+      try {
+        exportBtn.disabled = true;
+        exportBtn.innerHTML = '⏳ Exporting...';
+        
+        // Build export URL
+        const params = new URLSearchParams();
+        if (currentListId) {
+          params.append('listId', currentListId);
+        }
+        
+        const url = '/api/bookmarks/export' + (params.toString() ? '?' + params.toString() : '');
+        
+        // Fetch the export data
+        const response = await fetch(url, {
+          credentials: 'same-origin',
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Export failed');
+        }
+        
+        const data = await response.json();
+        
+        // Create downloadable file
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const downloadUrl = URL.createObjectURL(blob);
+        
+        // Generate filename
+        const listName = currentListId 
+          ? allLists.find(l => l.id === currentListId)?.name || 'list'
+          : 'all-bookmarks';
+        const date = new Date().toISOString().split('T')[0];
+        const filename = `${listName.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${date}.json`;
+        
+        // Trigger download
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(downloadUrl);
+        
+        showSuccessToast('Export complete', `Downloaded ${data.bookmarks.length} bookmarks`);
+      } catch (error) {
+        console.error('Export failed:', error);
+        showErrorToast('Export failed', error.message);
+      } finally {
+        exportBtn.disabled = false;
+        exportBtn.innerHTML = originalText;
+      }
+    }
+
+    function renderLists() {
+      // Add "All Bookmarks" at the top
+      let html = `
+        <div class="list-item ${currentListId === null ? 'active' : ''}" onclick="loadBookmarks(null)">
+          <span class="list-icon">📚</span>
+          <div class="list-info">
+            <div class="list-name">All Bookmarks</div>
+          </div>
+        </div>
+      `;
+
+      html += allLists.map(list => `
+        <div class="list-item ${currentListId === list.id ? 'active' : ''}" onclick="loadBookmarks(${list.id})">
+          <div class="list-color-indicator" style="background-color: ${list.color};"></div>
+          <span class="list-icon">${list.icon}</span>
+          <div class="list-info">
+            <div class="list-name">${escapeHtml(list.name)}</div>
+            <div class="list-count">${list.bookmark_count || 0} problem${list.bookmark_count !== 1 ? 's' : ''}</div>
+          </div>
+          <div class="list-actions">
+            <button class="list-action-btn" onclick="event.stopPropagation(); openEditListModal(${list.id})" title="Edit list">✏️</button>
+            <button class="list-action-btn delete" onclick="event.stopPropagation(); openDeleteModal(${list.id})" title="Delete list">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+
+      listsContainer.innerHTML = html;
+    }
+
+    function renderBookmarks() {
+      if (allBookmarks.length === 0) {
+        const isAllView = currentListId === null;
+        bookmarksGrid.innerHTML = `
+          <div class="empty-bookmarks">
+            <div class="empty-bookmarks-icon">📌</div>
+            <h3>No bookmarks yet</h3>
+            <p>${isAllView ? 
+              'Start bookmarking problems while practicing!' : 
+              'Add problems to this list from the problem page.'
+            }</p>
+            <a href="/problems" class="btn btn-primary" style="margin-top: 1rem;">Browse Problems</a>
+          </div>
+        `;
+        return;
+      }
+
+      bookmarksGrid.innerHTML = allBookmarks.map(bookmark => {
+        const difficultyClass = `difficulty-${bookmark.difficulty.toLowerCase()}`;
+        const topics = (bookmark.topics || []).slice(0, 3);
+        const timeAgo = getTimeAgo(new Date(bookmark.created_at));
+
+        return `
+          <div class="bookmark-card">
+            <div class="bookmark-problem-info">
+              <div class="bookmark-problem-title">
+                <a href="/problem/${bookmark.problem_slug}">${escapeHtml(bookmark.problem_title)}</a>
+                <span class="difficulty ${difficultyClass}">${bookmark.difficulty}</span>
+              </div>
+              <div class="bookmark-meta">
+                <span>Added ${timeAgo}</span>
+              </div>
+              ${topics.length > 0 ? `
+                <div class="bookmark-topics">
+                  ${topics.map(t => `<span class="bookmark-topic-tag">${escapeHtml(t)}</span>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+            ${currentListId === null ? `
+              <span class="bookmark-list-badge" style="background-color: ${bookmark.list_color}22; color: ${bookmark.list_color};">
+                ${bookmark.list_icon} ${escapeHtml(bookmark.list_name)}
+              </span>
+            ` : ''}
+            <div class="bookmark-actions">
+              <div class="move-actions-wrapper">
+                <button class="bookmark-action-btn" onclick="toggleMoveDropdown(event, ${bookmark.id}, ${bookmark.list_id})">
+                  📁 Move
+                </button>
+                <div class="move-dropdown hidden" id="move-dropdown-${bookmark.id}">
+                  ${allLists.map(list => `
+                    <div class="move-dropdown-item ${list.id === bookmark.list_id ? 'current' : ''}" 
+                         onclick="moveBookmark(${bookmark.id}, ${list.id}, ${list.id === bookmark.list_id})">
+                      <span style="color: ${list.color};">${list.icon}</span>
+                      ${escapeHtml(list.name)}
+                      ${list.id === bookmark.list_id ? ' ✓' : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              <a href="/problem/${bookmark.problem_slug}" class="bookmark-action-btn solve">Solve</a>
+              <button class="bookmark-action-btn delete" onclick="removeBookmark(${bookmark.id})">
+                🗑️
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function updateHeader() {
+      if (currentListId === null) {
+        currentListName.textContent = 'All Bookmarks';
+        currentListIcon.textContent = '📚';
+        currentListDescription.textContent = 'All your bookmarked problems';
+      } else {
+        const list = allLists.find(l => l.id === currentListId);
+        if (list) {
+          currentListName.textContent = list.name;
+          currentListIcon.textContent = list.icon;
+          currentListDescription.textContent = list.description || '';
+        }
+      }
+      bookmarksCount.textContent = `${allBookmarks.length} problem${allBookmarks.length !== 1 ? 's' : ''}`;
+    }
+
+    function toggleMoveDropdown(event, bookmarkId, currentListId) {
+      event.stopPropagation();
+      
+      // Hide all other dropdowns
+      document.querySelectorAll('.move-dropdown').forEach(d => {
+        if (d.id !== `move-dropdown-${bookmarkId}`) {
+          d.classList.add('hidden');
+        }
+      });
+      
+      const dropdown = document.getElementById(`move-dropdown-${bookmarkId}`);
+      dropdown.classList.toggle('hidden');
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.move-dropdown').forEach(d => d.classList.add('hidden'));
+    });
+
+    async function moveBookmark(bookmarkId, newListId, isCurrent) {
+      if (isCurrent) return;
+      
+      // Find list name for better messages
+      const targetList = allLists.find(l => l.id === newListId);
+      const listName = targetList ? targetList.name : 'the list';
+      
+      try {
+        await API.updateBookmark(bookmarkId, { listId: newListId });
+        showSuccessToast('Bookmark moved', `Moved to "${listName}"`);
+        await loadLists();
+        await loadBookmarks(currentListId);
+      } catch (error) {
+        console.error('Failed to move bookmark:', error);
+        
+        // Check for duplicate error
+        if (error.message.includes('already bookmarked')) {
+          showWarningToast('Already in list', `This problem is already bookmarked in "${listName}"`);
+        } else {
+          showErrorToast('Move failed', error.message);
+        }
+      }
+    }
+
+    async function removeBookmark(bookmarkId) {
+      if (!confirm('Remove this bookmark?')) return;
+      
+      try {
+        await API.removeBookmark(bookmarkId);
+        showSuccessToast('Bookmark removed', 'The bookmark has been removed');
+        await loadLists();
+        await loadBookmarks(currentListId);
+      } catch (error) {
+        console.error('Failed to remove bookmark:', error);
+        showErrorToast('Remove failed', error.message);
+      }
+    }
+
+    // List Modal Functions
+    function openCreateListModal() {
+      editingListId = null;
+      document.getElementById('modal-title').textContent = 'Create New List';
+      document.getElementById('list-name-input').value = '';
+      document.getElementById('list-description-input').value = '';
+      document.getElementById('save-list-btn').textContent = 'Create List';
+      
+      // Reset color and icon
+      selectedColor = '#3b82f6';
+      selectedIcon = '📚';
+      document.querySelectorAll('.color-option').forEach(o => {
+        o.classList.toggle('selected', o.dataset.color === selectedColor);
+      });
+      document.querySelectorAll('.icon-option').forEach(o => {
+        o.classList.toggle('selected', o.dataset.icon === selectedIcon);
+      });
+      
+      document.getElementById('list-modal').classList.remove('hidden');
+      document.getElementById('list-name-input').focus();
+    }
+
+    function openEditListModal(listId) {
+      const list = allLists.find(l => l.id === listId);
+      if (!list) return;
+      
+      editingListId = listId;
+      document.getElementById('modal-title').textContent = 'Edit List';
+      document.getElementById('list-name-input').value = list.name;
+      document.getElementById('list-description-input').value = list.description || '';
+      document.getElementById('save-list-btn').textContent = 'Save Changes';
+      
+      selectedColor = list.color;
+      selectedIcon = list.icon;
+      document.querySelectorAll('.color-option').forEach(o => {
+        o.classList.toggle('selected', o.dataset.color === selectedColor);
+      });
+      document.querySelectorAll('.icon-option').forEach(o => {
+        o.classList.toggle('selected', o.dataset.icon === selectedIcon);
+      });
+      
+      document.getElementById('list-modal').classList.remove('hidden');
+      document.getElementById('list-name-input').focus();
+    }
+
+    function closeListModal() {
+      document.getElementById('list-modal').classList.add('hidden');
+    }
+
+    async function saveList() {
+      const name = document.getElementById('list-name-input').value.trim();
+      const description = document.getElementById('list-description-input').value.trim();
+      
+      if (!name) {
+        showWarningToast('Name required', 'Please enter a list name');
+        document.getElementById('list-name-input').focus();
+        return;
+      }
+      
+      try {
+        if (editingListId) {
+          await API.updateBookmarkList(editingListId, {
+            name,
+            description,
+            color: selectedColor,
+            icon: selectedIcon
+          });
+          showSuccessToast('List updated', `"${name}" has been updated`);
+        } else {
+          await API.createBookmarkList(name, description, selectedColor, selectedIcon);
+          showSuccessToast('List created', `"${name}" has been created`);
+        }
+        
+        closeListModal();
+        await loadLists();
+        renderLists();
+      } catch (error) {
+        console.error('Failed to save list:', error);
+        
+        // Check for duplicate name error
+        if (error.message.includes('already exists')) {
+          showWarningToast('Duplicate name', `A list named "${name}" already exists. Please choose a different name.`);
+          document.getElementById('list-name-input').focus();
+          document.getElementById('list-name-input').select();
+        } else {
+          showErrorToast('Save failed', error.message);
+        }
+      }
+    }
+
+    // Delete Modal Functions
+    function openDeleteModal(listId) {
+      const list = allLists.find(l => l.id === listId);
+      if (!list) return;
+      
+      deleteListId = listId;
+      document.getElementById('delete-list-name').textContent = list.name;
+      document.getElementById('delete-modal').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.add('hidden');
+      deleteListId = null;
+    }
+
+    async function confirmDeleteList() {
+      if (!deleteListId) return;
+      
+      // Get list name for message
+      const list = allLists.find(l => l.id === deleteListId);
+      const listName = list ? list.name : 'The list';
+      
+      try {
+        await API.deleteBookmarkList(deleteListId);
+        closeDeleteModal();
+        
+        showSuccessToast('List deleted', `"${listName}" has been deleted`);
+        
+        // If we're viewing the deleted list, go to all bookmarks
+        if (currentListId === deleteListId) {
+          currentListId = null;
+        }
+        
+        await loadLists();
+        await loadBookmarks(currentListId);
+      } catch (error) {
+        console.error('Failed to delete list:', error);
+        showErrorToast('Delete failed', error.message);
+      }
+    }
+
+    function getTimeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      if (seconds < 60) return 'just now';
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return `${minutes}m ago`;
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return `${hours}h ago`;
+      const days = Math.floor(hours / 24);
+      if (days < 7) return `${days}d ago`;
+      return date.toLocaleDateString();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // Handle keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        closeListModal();
+        closeDeleteModal();
+      }
+    });
+
+    // Initialize
+    initPage();
+  </script>
+</body>
+</html>
