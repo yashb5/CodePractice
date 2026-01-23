@@ -116,6 +116,29 @@
       background-color: rgba(16, 185, 129, 0.15);
       color: #059669;
     }
+
+    .bookmark-indicator {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: help;
+    }
+
+    .bookmark-indicator.bookmarked {
+      color: #f59e0b;
+    }
+
+    .bookmark-indicator.not-bookmarked {
+      color: var(--border-color);
+      opacity: 0.5;
+    }
+
+    .problem-title-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
   </style>
 </head>
 <body>
@@ -127,7 +150,9 @@
       </a>
       <nav class="nav">
         <a href="/problems" class="nav-link" style="color: var(--primary-color);">Problems</a>
-        <div id="auth-nav">
+        <a href="/bookmarks" class="nav-link">Bookmarks</a>
+        <a href="/progress" class="nav-link">Progress</a>
+        <div id="auth-nav" class="hidden">
           <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
           <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
         </div>
@@ -187,6 +212,7 @@
     let allTopics = [];
     let currentTopic = 'All';
     let topicCounts = {};
+    let bookmarkedProblemIds = new Set();
 
     async function loadProblems(topic = 'All') {
       currentTopic = topic;
@@ -207,6 +233,9 @@
           });
           renderTopicTabs();
         }
+
+        // Load bookmarks if user is logged in
+        await loadBookmarks();
         
         updateActiveTab();
         renderProblems(problems);
@@ -219,6 +248,21 @@
             </td>
           </tr>
         `;
+      }
+    }
+
+    async function loadBookmarks() {
+      if (!currentUser) {
+        bookmarkedProblemIds = new Set();
+        return;
+      }
+      
+      try {
+        const { bookmarks } = await API.getBookmarks();
+        bookmarkedProblemIds = new Set(bookmarks.map(b => b.problem_id));
+      } catch (error) {
+        console.error('Failed to load bookmarks:', error);
+        bookmarkedProblemIds = new Set();
       }
     }
 
@@ -271,12 +315,17 @@
         const statusLabel = getStatusLabel(problem.userStatus);
         const difficultyClass = `difficulty-${problem.difficulty.toLowerCase()}`;
         const topics = (problem.topics || []).slice(0, 3); // Show max 3 topics
+        const isBookmarked = bookmarkedProblemIds.has(problem.id);
+        const bookmarkIndicator = isBookmarked 
+          ? '<span class="bookmark-indicator bookmarked" title="Bookmarked">⭐</span>'
+          : '';
         
         return `
           <tr>
             <td>${statusLabel}</td>
             <td>
-              <div class="problem-cell">
+              <div class="problem-cell problem-title-cell">
+                ${bookmarkIndicator}
                 <a href="/problem/${problem.slug}" class="problem-title">${problem.title}</a>
               </div>
             </td>

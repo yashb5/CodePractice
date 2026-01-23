@@ -62,7 +62,9 @@
       </a>
       <nav class="nav">
         <a href="/problems" class="nav-link">Problems</a>
-        <div id="auth-nav">
+        <a href="/bookmarks" class="nav-link">Bookmarks</a>
+        <a href="/progress" class="nav-link">Progress</a>
+        <div id="auth-nav" class="hidden">
           <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
           <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
         </div>
@@ -81,11 +83,11 @@
         <p style="font-size: 1.25rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2rem;">
           Practice coding problems, improve your algorithmic thinking, and prepare for technical interviews.
         </p>
-        <div style="display: flex; gap: 1rem; justify-content: center;">
+        <div style="display: flex; gap: 1rem; justify-content: center;" id="hero-buttons">
           <a href="/problems" class="btn btn-primary" style="padding: 1rem 2rem; font-size: 1rem;">
             Start Practicing
           </a>
-          <a href="/signup" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1rem;">
+          <a href="/signup" class="btn btn-secondary" style="padding: 1rem 2rem; font-size: 1rem; display: none;" id="hero-signup-btn">
             Create Account
           </a>
         </div>
@@ -146,17 +148,28 @@
 
     function updateFeatureCards() {
       const cards = document.querySelectorAll('.feature-card');
+      const heroSignupBtn = document.getElementById('hero-signup-btn');
       
       if (currentUser) {
         // Make cards clickable for logged-in users
         cards.forEach(card => {
           card.classList.add('clickable');
         });
+        
+        // Keep the "Create Account" button hidden for logged-in users
+        if (heroSignupBtn) {
+          heroSignupBtn.style.display = 'none';
+        }
       } else {
         // Remove clickable state for non-logged-in users
         cards.forEach(card => {
           card.classList.remove('clickable');
         });
+        
+        // Show the "Create Account" button only for non-logged-in users
+        if (heroSignupBtn) {
+          heroSignupBtn.style.display = 'inline-flex';
+        }
       }
     }
 
