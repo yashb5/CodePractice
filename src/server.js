@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth')(db);
 const problemsRoutes = require('./routes/problems')(db);
 const submissionsRoutes = require('./routes/submissions')(db);
 const bookmarksRoutes = require('./routes/bookmarks')(db);
+const timelineRoutes = require('./routes/timeline')(db);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -38,6 +39,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/problems', problemsRoutes);
 app.use('/api/submissions', submissionsRoutes);
 app.use('/api/bookmarks', bookmarksRoutes);
+app.use('/api/timeline', timelineRoutes);
 
 // Serve HTML pages
 app.get('/', (req, res) => {
@@ -66,6 +68,10 @@ app.get('/progress', (req, res) => {
 
 app.get('/bookmarks', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'bookmarks.html'));
+});
+
+app.get('/timeline', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'timeline.html'));
 });
 
 // Error handling

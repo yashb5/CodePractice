@@ -103,6 +103,22 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
   CREATE INDEX IF NOT EXISTS idx_bookmarks_list ON bookmarks(list_id);
   CREATE INDEX IF NOT EXISTS idx_bookmarks_problem ON bookmarks(problem_id);
+
+  CREATE TABLE IF NOT EXISTS timeline_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    event_type TEXT CHECK(event_type IN ('started', 'completed', 'bookmark_added', 'bookmark_removed')) NOT NULL,
+    problem_id INTEGER,
+    bookmark_id INTEGER,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_user ON timeline_events(user_id);
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_type ON timeline_events(event_type);
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_problem ON timeline_events(problem_id);
+  CREATE INDEX IF NOT EXISTS idx_timeline_events_created ON timeline_events(created_at);
 `);
 
 // Add unique constraint on bookmark list names per user (migration for existing DBs)

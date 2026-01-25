@@ -497,6 +497,7 @@
         <a href="/problems" class="nav-link">Problems</a>
         <a href="/bookmarks" class="nav-link">Bookmarks</a>
         <a href="/progress" class="nav-link">Progress</a>
+        <a href="/timeline" class="nav-link">Timeline</a>
         <div id="auth-nav" class="hidden">
           <a href="/login" class="btn btn-secondary btn-sm">Log In</a>
           <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
@@ -717,6 +718,38 @@
       }
     });
 
+    // Load user's last code for this problem
+    async function loadUserLastCode() {
+      try {
+        const { submissions } = await API.getSubmissionHistory(problemSlug);
+        if (submissions.length > 0) {
+          // Find the latest submission for the current language
+          const currentLang = languageSelect.value;
+          let lastSubmission = null;
+
+          // First try to find submission with current language
+          lastSubmission = submissions.find(s => s.language === currentLang);
+
+          // If not found, use the latest submission
+          if (!lastSubmission) {
+            lastSubmission = submissions[0];
+            // Switch to that language
+            languageSelect.value = lastSubmission.language;
+          }
+
+          // Set the code
+          codeEditor.value = lastSubmission.code;
+
+          // Optionally switch language if needed
+          if (lastSubmission.language !== currentLang) {
+            // The language change will trigger the code update, but since we're setting it manually, it's fine
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load last code:', error);
+      }
+    }
+
     // Load problem
     async function loadProblem() {
       try {
@@ -770,6 +803,11 @@
         // Load bookmark data if user is logged in
         if (currentUser) {
           loadBookmarkData();
+          // Check if should load user's last code
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('load_user_code') === '1') {
+            loadUserLastCode();
+          }
         }
       } catch (error) {
         problemLoading.innerHTML = `
