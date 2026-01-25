@@ -473,11 +473,17 @@ module.exports = function(db) {
         INSERT INTO bookmarks (user_id, problem_id, list_id, notes)
         VALUES (?, ?, ?, ?)
       `).run(userId, problemId, listId, notes || '');
-      
+
+      // Insert timeline event
+      db.prepare(`
+        INSERT INTO timeline_events (user_id, event_type, problem_id, bookmark_id)
+        VALUES (?, 'bookmark_added', ?, ?)
+      `).run(userId, problemId, result.lastInsertRowid);
+
       const newBookmark = db.prepare(`
-        SELECT b.*, 
-          p.title as problem_title, 
-          p.slug as problem_slug, 
+        SELECT b.*,
+          p.title as problem_title,
+          p.slug as problem_slug,
           p.difficulty,
           bl.name as list_name,
           bl.color as list_color,
@@ -561,7 +567,13 @@ module.exports = function(db) {
       if (!bookmark) {
         return res.status(404).json({ error: 'Bookmark not found' });
       }
-      
+
+      // Insert timeline event
+      db.prepare(`
+        INSERT INTO timeline_events (user_id, event_type, problem_id, bookmark_id)
+        VALUES (?, 'bookmark_removed', ?, ?)
+      `).run(userId, bookmark.problem_id, bookmarkId);
+
       db.prepare('DELETE FROM bookmarks WHERE id = ? AND user_id = ?').run(bookmarkId, userId);
       
       res.json({ success: true });
@@ -576,13 +588,21 @@ module.exports = function(db) {
     try {
       const userId = req.session.userId;
       const { problemId, listId } = req.params;
-      
-      const result = db.prepare('DELETE FROM bookmarks WHERE user_id = ? AND problem_id = ? AND list_id = ?').run(userId, problemId, listId);
-      
-      if (result.changes === 0) {
+
+      // Get bookmark id before deleting
+      const bookmark = db.prepare('SELECT id FROM bookmarks WHERE user_id = ? AND problem_id = ? AND list_id = ?').get(userId, problemId, listId);
+      if (!bookmark) {
         return res.status(404).json({ error: 'Bookmark not found' });
       }
-      
+
+      // Insert timeline event
+      db.prepare(`
+        INSERT INTO timeline_events (user_id, event_type, problem_id, bookmark_id)
+        VALUES (?, 'bookmark_removed', ?, ?)
+      `).run(userId, problemId, bookmark.id);
+
+      const result = db.prepare('DELETE FROM bookmarks WHERE user_id = ? AND problem_id = ? AND list_id = ?').run(userId, problemId, listId);
+
       res.json({ success: true });
     } catch (error) {
       console.error('Delete bookmark by problem/list error:', error);

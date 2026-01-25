@@ -221,6 +221,35 @@ module.exports = function(db) {
         })
       );
 
+      // Insert timeline events
+      // Check if first submission for this problem
+      const existingSubmissions = db.prepare(`
+        SELECT COUNT(*) as count FROM submissions WHERE user_id = ? AND problem_id = ?
+      `).get(userId, problem.id).count;
+
+      if (existingSubmissions === 1) {
+        // This is the first submission, so 'started'
+        db.prepare(`
+          INSERT INTO timeline_events (user_id, event_type, problem_id)
+          VALUES (?, 'started', ?)
+        `).run(userId, problem.id);
+      }
+
+      if (result.summary.status === 'Accepted') {
+        // Check if first Accepted
+        const existingAccepted = db.prepare(`
+          SELECT COUNT(*) as count FROM submissions WHERE user_id = ? AND problem_id = ? AND status = 'Accepted'
+        `).get(userId, problem.id).count;
+
+        if (existingAccepted === 1) {
+          // This is the first Accepted, so 'completed'
+          db.prepare(`
+            INSERT INTO timeline_events (user_id, event_type, problem_id)
+            VALUES (?, 'completed', ?)
+          `).run(userId, problem.id);
+        }
+      }
+
       res.json({
         success: true,
         submissionId: submission.lastInsertRowid,

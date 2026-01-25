@@ -5,7 +5,7 @@ const API = {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'same-origin'
+      credentials: 'include'
     };
 
     const response = await fetch(url, { ...defaultOptions, ...options });
