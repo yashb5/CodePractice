@@ -1,4 +1,5 @@
 const db = require('./database');
+const bcrypt = require('bcryptjs');
 
 // Clear existing data (order matters due to foreign keys)
 db.exec('DELETE FROM submissions');
@@ -1442,3 +1443,21 @@ for (const problem of problems) {
 console.log(`Seeded ${problems.length} problems successfully!`);
 console.log(`Topics: ${TOPICS.join(', ')}`);
 console.log(`Editorials: ${Object.keys(editorials).length} detailed, ${problems.length - Object.keys(editorials).length} default`);
+
+// Create admin user if not exists
+const adminEmail = 'admin@codepractice.com';
+const adminPassword = 'admin123';
+const existingAdmin = db.prepare('SELECT id, role FROM users WHERE email = ?').get(adminEmail);
+if (!existingAdmin) {
+  const hashedPassword = bcrypt.hashSync(adminPassword, 10);
+  db.prepare('INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)').run('admin', adminEmail, hashedPassword, 'admin');
+  console.log('Created admin user: admin@codepractice.com / admin123');
+} else {
+  // Update existing admin user to have admin role if not set
+  if (!existingAdmin.role || existingAdmin.role !== 'admin') {
+    db.prepare('UPDATE users SET role = ? WHERE id = ?').run('admin', existingAdmin.id);
+    console.log('Updated existing admin user with admin role');
+  } else {
+    console.log('Admin user already exists');
+  }
+}

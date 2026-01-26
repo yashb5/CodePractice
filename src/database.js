@@ -128,4 +128,71 @@ try {
   // Index might already exist or there are duplicates, ignore
 }
 
+// Migration code removed - handling in application logic instead
+
+// Add role column to users if not exists
+try {
+  db.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'`);
+} catch (e) {
+  // Column already exists, ignore
+}
+
+// Create contests tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS contests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT DEFAULT '',
+    start_time DATETIME,
+    end_time DATETIME,
+    status TEXT CHECK(status IN ('draft', 'published', 'ongoing', 'ended')) DEFAULT 'draft',
+    created_by INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS contest_problems (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contest_id INTEGER NOT NULL,
+    problem_id INTEGER NOT NULL,
+    marks INTEGER NOT NULL DEFAULT 100,
+    problem_order INTEGER NOT NULL,
+    FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE,
+    FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE
+  );
+
+  CREATE TABLE IF NOT EXISTS contest_participants (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contest_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    score INTEGER DEFAULT 0,
+    joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE(contest_id, user_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS contest_submissions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contest_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    problem_id INTEGER NOT NULL,
+    submission_id INTEGER NOT NULL,
+    marks_awarded INTEGER NOT NULL DEFAULT 0,
+    submitted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (contest_id) REFERENCES contests(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (problem_id) REFERENCES problems(id) ON DELETE CASCADE,
+    FOREIGN KEY (submission_id) REFERENCES submissions(id) ON DELETE CASCADE
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_contests_status ON contests(status);
+  CREATE INDEX IF NOT EXISTS idx_contests_created_by ON contests(created_by);
+  CREATE INDEX IF NOT EXISTS idx_contest_problems_contest ON contest_problems(contest_id);
+  CREATE INDEX IF NOT EXISTS idx_contest_participants_contest ON contest_participants(contest_id);
+  CREATE INDEX IF NOT EXISTS idx_contest_participants_user ON contest_participants(user_id);
+  CREATE INDEX IF NOT EXISTS idx_contest_submissions_contest ON contest_submissions(contest_id);
+  CREATE INDEX IF NOT EXISTS idx_contest_submissions_user ON contest_submissions(user_id);
+`);
+
 module.exports = db;

@@ -9,7 +9,19 @@ const API = {
     };
 
     const response = await fetch(url, { ...defaultOptions, ...options });
-    const data = await response.json();
+
+    // Handle redirects (authentication required)
+    if (response.redirected || response.status === 302) {
+      throw new Error('Authentication required');
+    }
+
+    let data;
+    try {
+      data = await response.json();
+    } catch (e) {
+      // If response is not JSON, throw a generic error
+      throw new Error('Server error');
+    }
 
     if (!response.ok) {
       throw new Error(data.error || 'An error occurred');
@@ -63,10 +75,10 @@ const API = {
     });
   },
 
-  async submitCode(problemSlug, code, language) {
+  async submitCode(problemSlug, code, language, contestId = null) {
     return this.request('/api/submissions/submit', {
       method: 'POST',
-      body: JSON.stringify({ problemSlug, code, language })
+      body: JSON.stringify({ problemSlug, code, language, contestId })
     });
   },
 
@@ -141,6 +153,84 @@ const API = {
     return this.request(`/api/bookmarks/problem/${problemId}/list/${listId}`, {
       method: 'DELETE'
     });
+  },
+
+  // Contests
+  async getContests() {
+    return this.request('/api/contests');
+  },
+
+  async createContest(contestData) {
+    return this.request('/api/contests', {
+      method: 'POST',
+      body: JSON.stringify(contestData)
+    });
+  },
+
+  async getContest(id) {
+    return this.request(`/api/contests/${id}`);
+  },
+
+  async updateContest(id, updates) {
+    return this.request(`/api/contests/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
+  },
+
+  async joinContest(contestId) {
+    return this.request(`/api/contests/${contestId}/join`, {
+      method: 'POST'
+    });
+  },
+
+  async getContestLeaderboard(contestId) {
+    return this.request(`/api/contests/${contestId}/leaderboard`);
+  },
+
+  // Contest Management (Admin only)
+  async updateContest(contestId, updates) {
+    return this.request(`/api/contests/${contestId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
+  },
+
+  async publishContest(contestId, publishData) {
+    return this.request(`/api/contests/${contestId}/publish`, {
+      method: 'POST',
+      body: JSON.stringify(publishData)
+    });
+  },
+
+  async addProblemToContest(contestId, problemData) {
+    // First get problem ID from slug
+    const { problems } = await this.getProblems();
+    const problem = problems.find(p => p.slug === problemData.problem_slug);
+    if (!problem) {
+      throw new Error('Problem not found');
+    }
+
+    return this.request(`/api/contests/${contestId}/problems`, {
+      method: 'POST',
+      body: JSON.stringify({
+        problem_id: problem.id,
+        marks: problemData.marks
+      })
+    });
+  },
+
+  async updateProblemMarks(contestId, problemId, updates) {
+    return this.request(`/api/contests/${contestId}/problems/${problemId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    });
+  },
+
+  async removeProblemFromContest(contestId, problemId) {
+    return this.request(`/api/contests/${contestId}/problems/${problemId}`, {
+      method: 'DELETE'
+    });
   }
 };
 
@@ -189,8 +279,25 @@ async function handleLogout() {
   }
 }
 
+// Page-specific initialization functions
+const pageInitFunctions = [];
+
+function registerPageInit(fn) {
+  pageInitFunctions.push(fn);
+}
+
 // Initialize auth check on page load
-document.addEventListener('DOMContentLoaded', checkAuth);
+document.addEventListener('DOMContentLoaded', async () => {
+  await checkAuth();
+  // Run page-specific initialization functions
+  for (const fn of pageInitFunctions) {
+    try {
+      await fn();
+    } catch (error) {
+      console.error('Page initialization error:', error);
+    }
+  }
+});
 
 // ==================== TOAST NOTIFICATIONS ====================
 

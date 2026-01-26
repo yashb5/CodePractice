@@ -70,9 +70,9 @@ module.exports = function(db) {
 
       req.session.userId = user.id;
 
-      res.json({ 
-        success: true, 
-        user: { id: user.id, username: user.username, email: user.email } 
+      res.json({
+        success: true,
+        user: { id: user.id, username: user.username, email: user.email, role: user.role || 'user' }
       });
     } catch (error) {
       console.error('Login error:', error);
@@ -96,7 +96,7 @@ module.exports = function(db) {
       return res.json({ user: null });
     }
 
-    const user = db.prepare('SELECT id, username, email FROM users WHERE id = ?').get(req.session.userId);
+    const user = db.prepare('SELECT id, username, email, role FROM users WHERE id = ?').get(req.session.userId);
     res.json({ user: user || null });
   });
 

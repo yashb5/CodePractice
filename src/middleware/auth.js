@@ -17,7 +17,7 @@ function optionalAuth(req, res, next) {
 function attachUser(db) {
   return (req, res, next) => {
     if (req.session && req.session.userId) {
-      const user = db.prepare('SELECT id, username, email FROM users WHERE id = ?').get(req.session.userId);
+      const user = db.prepare('SELECT id, username, email, role FROM users WHERE id = ?').get(req.session.userId);
       req.user = user || null;
     } else {
       req.user = null;
@@ -28,8 +28,19 @@ function attachUser(db) {
   };
 }
 
+function requireAdmin(req, res, next) {
+  if (!req.user || req.user.role !== 'admin') {
+    if (req.xhr || req.headers.accept?.includes('application/json')) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    return res.status(403).send('Admin access required');
+  }
+  next();
+}
+
 module.exports = {
   requireAuth,
   optionalAuth,
-  attachUser
+  attachUser,
+  requireAdmin
 };

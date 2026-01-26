@@ -173,7 +173,7 @@ module.exports = function(db) {
   // Submit solution (runs against all tests and saves result)
   router.post('/submit', requireAuth, async (req, res) => {
     try {
-      const { problemSlug, code, language } = req.body;
+      const { problemSlug, code, language, contestId } = req.body;
       const userId = req.session.userId;
 
       if (!problemSlug || !code || !language) {
@@ -221,6 +221,69 @@ module.exports = function(db) {
         })
       );
 
+      // Handle contest submission
+      let contestMarksAwarded = 0;
+      if (contestId) {
+        // Check if contest exists and is in-progress
+        const contest = db.prepare(`
+          SELECT c.id, c.start_time, c.end_time, c.status, cp.marks
+          FROM contests c
+          JOIN contest_problems cp ON c.id = cp.contest_id AND cp.problem_id = ?
+          WHERE c.id = ? AND (c.status = 'in-progress' OR c.status = 'published')
+        `).get(problem.id, contestId);
+
+        if (contest) {
+          const now = new Date();
+          const start = new Date(contest.start_time);
+          const end = new Date(contest.end_time);
+
+          // Check if contest is actually in progress
+          if (now >= start && now <= end && contest.status !== 'ended') {
+            // Check if user is participating
+            const participant = db.prepare(`
+              SELECT id FROM contest_participants WHERE contest_id = ? AND user_id = ?
+            `).get(contestId, userId);
+
+            if (participant) {
+              // Check if already solved this problem in contest
+              const existingSolve = db.prepare(`
+                SELECT id FROM contest_submissions
+                WHERE contest_id = ? AND user_id = ? AND problem_id = ? AND marks_awarded > 0
+              `).get(contestId, userId, problem.id);
+
+              if (!existingSolve && result.summary.status === 'Accepted') {
+                contestMarksAwarded = contest.marks;
+
+                // Record contest submission
+                db.prepare(`
+                  INSERT INTO contest_submissions (contest_id, user_id, problem_id, submission_id, marks_awarded)
+                  VALUES (?, ?, ?, ?, ?)
+                `).run(contestId, userId, problem.id, submission.lastInsertRowid, contest.marks);
+
+                // Update participant score
+                db.prepare(`
+                  UPDATE contest_participants SET score = score + ? WHERE contest_id = ? AND user_id = ?
+                `).run(contest.marks, contestId, userId);
+              } else {
+                // Record submission without marks (already solved or not accepted)
+                db.prepare(`
+                  INSERT INTO contest_submissions (contest_id, user_id, problem_id, submission_id, marks_awarded)
+                  VALUES (?, ?, ?, ?, 0)
+                `).run(contestId, userId, problem.id, submission.lastInsertRowid, 0);
+              }
+            } else {
+              return res.status(403).json({ error: 'You are not participating in this contest' });
+            }
+          } else if (now > end) {
+            return res.status(400).json({ error: 'Contest has ended' });
+          } else {
+            return res.status(400).json({ error: 'Contest has not started yet' });
+          }
+        } else {
+          return res.status(404).json({ error: 'Contest or problem not found in contest' });
+        }
+      }
+
       // Insert timeline events
       // Check if first submission for this problem
       const existingSubmissions = db.prepare(`
@@ -258,6 +321,7 @@ module.exports = function(db) {
         total: result.summary.total,
         runtime: Math.round(result.summary.totalRuntime),
         memory: Math.round(result.summary.peakMemory),
+        contestMarksAwarded,
         results: result.results.map((r, i) => ({
           testCase: i + 1,
           status: r.status,
