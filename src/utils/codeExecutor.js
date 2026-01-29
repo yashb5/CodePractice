@@ -34,6 +34,63 @@ class CodeExecutor {
     return compilers;
   }
 
+  async runInterviewCode(code, language) {
+    const fileId = uuidv4();
+    const filesToCleanup = [];
+
+    try {
+      let result;
+
+      switch (language) {
+        case 'javascript':
+          result = await this.runInterviewJavaScript(fileId, code, filesToCleanup);
+          break;
+        case 'python':
+          result = await this.runInterviewPython(fileId, code, filesToCleanup);
+          break;
+        case 'java':
+          result = await this.runInterviewJava(fileId, code, filesToCleanup);
+          break;
+        case 'c':
+          result = await this.runInterviewC(fileId, code, filesToCleanup);
+          break;
+        case 'cpp':
+          result = await this.runInterviewCpp(fileId, code, filesToCleanup);
+          break;
+        case 'csharp':
+          result = await this.runInterviewCSharp(fileId, code, filesToCleanup);
+          break;
+        default:
+          return {
+            success: false,
+            error: `Unsupported language: ${language}`,
+            output: '',
+            runtime: 0,
+            memory: 0
+          };
+      }
+
+      return result;
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    } finally {
+      // Cleanup all files
+      for (const file of filesToCleanup) {
+        try {
+          if (fs.existsSync(file)) {
+            fs.unlinkSync(file);
+          }
+        } catch (e) {}
+      }
+    }
+  }
+
   async execute(code, language, testCases, functionName) {
     const results = [];
     let totalRuntime = 0;
@@ -138,6 +195,157 @@ class CodeExecutor {
         } catch (e) {}
       }
     }
+  }
+
+  async runInterviewJavaScript(fileId, code, filesToCleanup) {
+    const filePath = path.join(this.tempDir, `${fileId}.js`);
+    filesToCleanup.push(filePath);
+
+    fs.writeFileSync(filePath, code);
+
+    return await this.executeInterviewProcess('node', ['--max-old-space-size=128', filePath]);
+  }
+
+  async runInterviewPython(fileId, code, filesToCleanup) {
+    const filePath = path.join(this.tempDir, `${fileId}.py`);
+    filesToCleanup.push(filePath);
+
+    fs.writeFileSync(filePath, code);
+
+    return await this.executeInterviewProcess('python3', [filePath]);
+  }
+
+  async runInterviewJava(fileId, code, filesToCleanup) {
+    if (!this.availableCompilers.java) {
+      return {
+        success: false,
+        error: 'Java compiler not available on this system',
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    }
+
+    const className = 'Main';
+    const filePath = path.join(this.tempDir, `${className}.java`);
+    const classFile = path.join(this.tempDir, `${className}.class`);
+    filesToCleanup.push(filePath, classFile);
+
+    fs.writeFileSync(filePath, code);
+
+    // Compile
+    try {
+      execSync(`javac "${filePath}"`, { cwd: this.tempDir, timeout: 10000, stdio: 'pipe' });
+    } catch (error) {
+      return {
+        success: false,
+        error: error.stderr?.toString() || error.message,
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    }
+
+    return await this.executeInterviewProcess('java', ['-cp', this.tempDir, className]);
+  }
+
+  async runInterviewC(fileId, code, filesToCleanup) {
+    if (!this.availableCompilers.gcc) {
+      return {
+        success: false,
+        error: 'GCC compiler not available on this system',
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    }
+
+    const srcPath = path.join(this.tempDir, `${fileId}.c`);
+    const binPath = path.join(this.tempDir, fileId);
+    filesToCleanup.push(srcPath, binPath);
+
+    fs.writeFileSync(srcPath, code);
+
+    // Compile
+    try {
+      execSync(`gcc -o "${binPath}" "${srcPath}" -lm`, { timeout: 10000, stdio: 'pipe' });
+    } catch (error) {
+      return {
+        success: false,
+        error: error.stderr?.toString() || error.message,
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    }
+
+    return await this.executeInterviewProcess(binPath, []);
+  }
+
+  async runInterviewCpp(fileId, code, filesToCleanup) {
+    if (!this.availableCompilers.gpp) {
+      return {
+        success: false,
+        error: 'G++ compiler not available on this system',
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    }
+
+    const srcPath = path.join(this.tempDir, `${fileId}.cpp`);
+    const binPath = path.join(this.tempDir, fileId);
+    filesToCleanup.push(srcPath, binPath);
+
+    fs.writeFileSync(srcPath, code);
+
+    // Compile
+    try {
+      execSync(`g++ -o "${binPath}" "${srcPath}" -std=c++17`, { timeout: 10000, stdio: 'pipe' });
+    } catch (error) {
+      return {
+        success: false,
+        error: error.stderr?.toString() || error.message,
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    }
+
+    return await this.executeInterviewProcess(binPath, []);
+  }
+
+  async runInterviewCSharp(fileId, code, filesToCleanup) {
+    if (!this.availableCompilers.csharp) {
+      return {
+        success: false,
+        error: 'C# compiler (mcs/mono) not available on this system',
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    }
+
+    const srcPath = path.join(this.tempDir, `${fileId}.cs`);
+    const binPath = path.join(this.tempDir, `${fileId}.exe`);
+    filesToCleanup.push(srcPath, binPath);
+
+    fs.writeFileSync(srcPath, code);
+
+    // Compile
+    try {
+      execSync(`mcs -out:"${binPath}" "${srcPath}"`, { timeout: 10000, stdio: 'pipe' });
+    } catch (error) {
+      return {
+        success: false,
+        error: error.stderr?.toString() || error.message,
+        output: '',
+        runtime: 0,
+        memory: 0
+      };
+    }
+
+    return await this.executeInterviewProcess('mono', [binPath]);
   }
 
   async runJavaScript(fileId, code, testCase, functionName, filesToCleanup) {
@@ -694,6 +902,83 @@ class Program {
   generateCSharpFunctionCall(functionName, inputs) {
     const args = inputs.map((_, i) => `input${i}`).join(', ');
     return `${functionName}(${args})`;
+  }
+
+  executeInterviewProcess(command, args) {
+    return new Promise((resolve) => {
+      const startTime = Date.now();
+      let stdout = '';
+      let stderr = '';
+      let killed = false;
+
+      const proc = spawn(command, args, {
+        timeout: TIMEOUT_MS,
+        stdio: ['pipe', 'pipe', 'pipe']
+      });
+
+      const timeout = setTimeout(() => {
+        killed = true;
+        proc.kill('SIGKILL');
+      }, TIMEOUT_MS);
+
+      proc.stdout.on('data', (data) => {
+        if (stdout.length < MAX_OUTPUT_SIZE) {
+          stdout += data.toString();
+        }
+      });
+
+      proc.stderr.on('data', (data) => {
+        if (stderr.length < MAX_OUTPUT_SIZE) {
+          stderr += data.toString();
+        }
+      });
+
+      proc.on('close', (code) => {
+        clearTimeout(timeout);
+        const endTime = Date.now();
+
+        if (killed) {
+          resolve({
+            success: false,
+            error: `Execution exceeded ${TIMEOUT_MS}ms`,
+            output: stdout,
+            runtime: TIMEOUT_MS,
+            memory: 0
+          });
+          return;
+        }
+
+        if (code !== 0 && stderr) {
+          resolve({
+            success: false,
+            error: stderr.trim(),
+            output: stdout,
+            runtime: endTime - startTime,
+            memory: 0
+          });
+          return;
+        }
+
+        resolve({
+          success: true,
+          output: stdout,
+          error: stderr,
+          runtime: endTime - startTime,
+          memory: 0
+        });
+      });
+
+      proc.on('error', (err) => {
+        clearTimeout(timeout);
+        resolve({
+          success: false,
+          error: err.message,
+          output: '',
+          runtime: 0,
+          memory: 0
+        });
+      });
+    });
   }
 
   executeProcess(command, args, expected) {

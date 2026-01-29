@@ -63,6 +63,13 @@ const API = {
     });
   },
 
+  async runInterviewCode(code, language) {
+    return this.request('/api/submissions/interview-run', {
+      method: 'POST',
+      body: JSON.stringify({ code, language })
+    });
+  },
+
   async submitCode(problemSlug, code, language) {
     return this.request('/api/submissions/submit', {
       method: 'POST',
