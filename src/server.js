@@ -74,6 +74,10 @@ app.get('/timeline', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'timeline.html'));
 });
 
+app.get('/interview', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'interview.html'));
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error('Server error:', err);

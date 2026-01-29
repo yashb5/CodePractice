@@ -131,6 +131,28 @@ const functionNameMap = {
 const SUPPORTED_LANGUAGES = ['javascript', 'python', 'java', 'c', 'cpp', 'csharp'];
 
 module.exports = function(db) {
+  // Run code for interview mode (no tests, just execution)
+  router.post('/interview-run', requireAuth, async (req, res) => {
+    try {
+      const { code, language } = req.body;
+
+      if (!code || !language) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      if (!SUPPORTED_LANGUAGES.includes(language)) {
+        return res.status(400).json({ error: `Unsupported language. Supported: ${SUPPORTED_LANGUAGES.join(', ')}` });
+      }
+
+      const result = await codeExecutor.runInterviewCode(code, language);
+
+      res.json(result);
+    } catch (error) {
+      console.error('Interview run error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
   // Run code against sample tests (no submission saved)
   router.post('/run', requireAuth, async (req, res) => {
     try {
