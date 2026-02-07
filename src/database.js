@@ -1,5 +1,6 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const metrics = require('./utils/metrics');
 
 const dbPath = path.join(__dirname, '..', 'data', 'coding_platform.db');
 
@@ -127,5 +128,44 @@ try {
 } catch (e) {
   // Index might already exist or there are duplicates, ignore
 }
+
+const originalPrepare = db.prepare.bind(db);
+db.prepare = function(sql) {
+  const stmt = originalPrepare(sql);
+  const originalGet = stmt.get.bind(stmt);
+  const originalAll = stmt.all.bind(stmt);
+  const originalRun = stmt.run.bind(stmt);
+  
+  stmt.get = function(...args) {
+    const start = Date.now();
+    const result = originalGet(...args);
+    metrics.recordDbQuery(Date.now() - start);
+    return result;
+  };
+  
+  stmt.all = function(...args) {
+    const start = Date.now();
+    const result = originalAll(...args);
+    metrics.recordDbQuery(Date.now() - start);
+    return result;
+  };
+  
+  stmt.run = function(...args) {
+    const start = Date.now();
+    const result = originalRun(...args);
+    metrics.recordDbQuery(Date.now() - start);
+    return result;
+  };
+  
+  return stmt;
+};
+
+const originalExec = db.exec.bind(db);
+db.exec = function(...args) {
+  const start = Date.now();
+  const result = originalExec(...args);
+  metrics.recordDbQuery(Date.now() - start);
+  return result;
+};
 
 module.exports = db;

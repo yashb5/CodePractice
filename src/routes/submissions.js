@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const codeExecutor = require('../utils/codeExecutor');
+const metrics = require('../utils/metrics');
 const { requireAuth } = require('../middleware/auth');
 
 // Function name mapping for different problems and languages
@@ -144,7 +145,10 @@ module.exports = function(db) {
         return res.status(400).json({ error: `Unsupported language. Supported: ${SUPPORTED_LANGUAGES.join(', ')}` });
       }
 
+      const execStart = Date.now();
       const result = await codeExecutor.runInterviewCode(code, language);
+      const execDuration = Date.now() - execStart;
+      metrics.recordCodeExecution(execDuration, result.success !== false);
 
       res.json(result);
     } catch (error) {
@@ -179,7 +183,10 @@ module.exports = function(db) {
         return res.status(400).json({ error: 'Function name not configured for this problem' });
       }
 
+      const execStart = Date.now();
       const result = await codeExecutor.execute(code, language, sampleTests, functionName);
+      const execDuration = Date.now() - execStart;
+      metrics.recordCodeExecution(execDuration, result.summary.allPassed !== false);
 
       res.json({
         success: true,
@@ -218,7 +225,10 @@ module.exports = function(db) {
         return res.status(400).json({ error: 'Function name not configured for this problem' });
       }
 
+      const execStart = Date.now();
       const result = await codeExecutor.execute(code, language, allTestCases, functionName);
+      const execDuration = Date.now() - execStart;
+      metrics.recordCodeExecution(execDuration, result.summary.allPassed !== false);
 
       // Save submission
       const submission = db.prepare(`
