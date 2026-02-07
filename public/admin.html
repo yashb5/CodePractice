@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - CodePractice</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    .dashboard { padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .metric-card { background: #2a2a2a; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    .charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px; }
+    .chart-container { background: #2a2a2a; padding: 20px; border-radius: 8px; }
+    .status { padding: 10px; border-radius: 4px; }
+    .status-ok { background: #2e7d32; }
+    .header { display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="header">
+      <h1>Admin Dashboard</h1>
+      <button onclick="refreshDashboard()">Refresh</button>
+    </div>
+    <div id="health" class="metric-card"></div>
+    <div class="charts">
+      <div class="chart-container">
+        <h3>Submission Activity (Last Hour)</h3>
+        <canvas id="submissionsChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>User Growth Trend</h3>
+        <canvas id="userGrowthChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Performance (Avg Response Time)</h3>
+        <canvas id="perfChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Language Usage</h3>
+        <canvas id="langChart"></canvas>
+      </div>
+    </div>
+    <div id="business" class="metric-card"></div>
+  </div>
+  <script>
+    let submissionsChart, userGrowthChart, perfChart, langChart;
+    async function fetchMetrics() {
+      const res = await fetch('/api/metrics');
+      return await res.json();
+    }
+    async function refreshDashboard() {
+      const m = await fetchMetrics();
+      // Health
+      const healthHtml = `
+        <div class="status ${m.database.avgQueryTime < 100 ? 'status-ok' : ''}">
+          <h2>System Health: ${m.database.avgQueryTime < 100 ? 'OK' : 'Degraded'}</h2>
+          <p>DB Avg Query: ${m.database.avgQueryTime.toFixed(0)}ms</p>
+          <p>Code Avg Exec: ${m.codeExecutor.avgExecutionTime.toFixed(0)}ms</p>
+          <p>Uptime: ${m.uptime.toFixed(0)}s</p>
+        </div>
+      `;
+      document.getElementById('health').innerHTML = healthHtml;
+      // Business
+      const b = m.business || {};
+      const busHtml = `
+        <h2>Business Metrics</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+          <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2rem; color: #4caf50;">${b.activeUsers || 0}</div>
+            <div>Active Users</div>
+          </div>
+          <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2rem; color: #2196f3;">${b.totalSubmissions || 0}</div>
+            <div>Total Submissions</div>
+          </div>
+          <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2rem; color: #ff9800;">${b.overallSolveRate ? b.overallSolveRate.toFixed(1) : 0}%</div>
+            <div>Solve Rate</div>
+          </div>
+          <div style="background: #2a2a2a; padding: 15px; border-radius: 8px; text-align: center;">
+            <div style="font-size: 2rem; color: #9c27b0;">${b.averageBookmarksPerUser ? b.averageBookmarksPerUser.toFixed(1) : 0}</div>
+            <div>Avg Bookmarks/User</div>
+          </div>
+        </div>
+      `;
+      document.getElementById('business').innerHTML = busHtml;
+      // Charts (mock data for demo; in production use real time series from metrics)
+      const labels = ['1h ago', '45m', '30m', '15m', 'now'];
+      if (submissionsChart) submissionsChart.destroy();
+      submissionsChart = new Chart(document.getElementById('submissionsChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{ label: 'Submissions', data: [5, 12, 8, 15, 22], borderColor: '#4caf50' }]
+        },
+        options: { responsive: true }
+      });
+      if (userGrowthChart) userGrowthChart.destroy();
+      userGrowthChart = new Chart(document.getElementById('userGrowthChart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ label: 'Active Users', data: [10, 12, 15, 18, 20], backgroundColor: '#2196f3' }]
+        },
+        options: { responsive: true }
+      });
+      if (perfChart) perfChart.destroy();
+      perfChart = new Chart(document.getElementById('perfChart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{ label: 'Avg Response (ms)', data: [120, 95, 110, 85, 70], borderColor: '#ff9800' }]
+        },
+        options: { responsive: true }
+      });
+      if (langChart) langChart.destroy();
+      langChart = new Chart(document.getElementById('langChart'), {
+        type: 'pie',
+        data: {
+          labels: (b.submissionsByLanguage || []).map(s => s.language),
+          datasets: [{ data: (b.submissionsByLanguage || []).map(s => s.count), backgroundColor: ['#4caf50', '#2196f3', '#ff9800'] }]
+        },
+        options: { responsive: true }
+      });
+    }
+    window.onload = refreshDashboard;
+    setInterval(refreshDashboard, 30000);
+  </script>
+</body>
+</html>
